@@ -1,5 +1,5 @@
 
-# function that serves are runner for `hopper` to allow program to change directory of current terminal
+# function that serves as a runner for `hopper`, allows program to change directory of current terminal
 hop() {
     export out=$(sh -c "HOPPERCMD ${1} ${2} ${3}")
     if [[ "$out" == "cd"* ]]; then
