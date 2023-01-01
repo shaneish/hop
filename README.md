@@ -46,3 +46,19 @@ make install
 ```
 
 The current build supports three different shells: nushell, zsh, and bash/dash.
+
+### how to use
+To add a shortcut to your directory with the shortcut name `example`:
+```zsh
+hop add example
+```
+
+To jump to the `example` named directory:
+```zsh
+hop example
+```
+
+To list all saved shortcuts:
+```zsh
+hop ls
+```
