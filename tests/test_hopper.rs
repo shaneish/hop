@@ -1,10 +1,7 @@
 use dirs::home_dir;
 use hopper::hopper;
 use rand::Rng;
-use std::{
-    fs::{create_dir, remove_dir, File},
-    io::Write,
-};
+use std::fs::{create_dir, remove_dir};
 use symlink;
 
 #[test]
@@ -27,8 +24,6 @@ fn test_list_files() {
     let temp_dir_name = format!("temp_test_dir-{}", rand::thread_rng().gen::<u32>());
     create_dir(home_dir.join(&temp_dir_name)).unwrap();
     println!("{:?}", home_dir.join(&temp_dir_name));
-    let mut file = File::create("temp_test_dir").unwrap();
-    writeln!(file, "[defaults]\neditor=\"nvim\"").unwrap();
     let new_sym = symlink::symlink_dir(
         format!(
             "{}/{}",
