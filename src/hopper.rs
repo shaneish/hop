@@ -1,6 +1,6 @@
 use dirs::home_dir;
 use serde_derive::Deserialize;
-use std::{convert::AsRef, fs, io, io::Write, path::Path};
+use std::{collections::HashSet, convert::AsRef, fs, io, io::Write, path::Path};
 use symlink;
 use toml::from_str;
 
@@ -111,5 +111,35 @@ impl Hopper {
             .collect::<Vec<String>>()
             .join("\n");
         format!("echo \"{}\"", output)
+    }
+
+    pub fn hop_names(&self) -> HashSet<String> {
+        fs::read_dir(self.config_dir.clone())
+            .unwrap()
+            .map(|p| p.unwrap().path().display().to_string())
+            .filter(|p| fs::metadata(p).unwrap().is_dir())
+            .map(|p| p.clone().split("/").last().unwrap().to_string())
+            .collect()
+    }
+
+    pub fn brb<T: AsRef<Path>>(&self, path: T) -> String {
+        let back_dir = format!("{}/back", self.config_dir);
+        match fs::read_link(&back_dir) {
+            Ok(_) => {
+                let remove_sym = symlink::remove_symlink_auto(&back_dir);
+                match remove_sym {
+                    Ok(_) => {}
+                    Err(_) => {
+                        return "echo \"[error] Cannot create brb hop.".to_string();
+                    }
+                }
+            }
+            Err(_) => {}
+        }
+        let create_sym = symlink::symlink_dir(path.as_ref(), &back_dir);
+        match create_sym {
+            Ok(_) => "echo \"[info] Set brb hop.\"".to_string(),
+            Err(_) => "echo \"[error] Cannot set brb hop.\"".to_string(),
+        }
     }
 }

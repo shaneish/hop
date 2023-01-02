@@ -6,16 +6,22 @@ fn main() -> io::Result<()> {
 
     let output: String = match env::args().nth(1) {
         Some(cmd) => match cmd.as_str() {
-            "add" => hopper.add_hop(
-                env::current_dir().unwrap(),
-                &env::args()
-                    .nth(2)
-                    .expect("Need to specify name to add hop."),
-            ),
+            "add" => match &env::args().nth(2) {
+                Some(name) => hopper.add_hop(env::current_dir().unwrap(), name),
+                None => "echo \"[error] Need to specify name to add hop.\"".to_string(),
+            },
             "ls" => hopper.list_hops(),
-            _ => hopper.hop(&cmd),
+            "version" => format!("echo \"Hop {}\"", env!("CARGO_PKG_VERSION")),
+            "brb" => hopper.brb(env::current_dir().unwrap()),
+            _ => {
+                if hopper.hop_names().contains(&cmd) {
+                    hopper.hop(&cmd)
+                } else {
+                    "echo \"[error] Invalid command or shortcut name.\"".to_string()
+                }
+            }
         },
-        None => "echo \"[error] Invalid command.\"".to_string(),
+        None => "echo \"[error] Missing command.\"".to_string(),
     };
     println!("{}", output);
     Ok(())
