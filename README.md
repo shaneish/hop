@@ -4,6 +4,7 @@
 i have a bash/zsh/nushell function named `short` that lets users jump to predefined directories easily.
 
 the basic zsh function is defined as:
+
 ```zsh
 short() {
     if [[ "$1" == "add" ]]; then

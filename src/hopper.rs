@@ -84,10 +84,11 @@ impl Hopper {
                 name,
                 path.as_ref().display().to_string()
             ),
-            Err(_) => format!(
-                "echo \"[error] unable to add hop {} -> {}\"",
+            Err(e) => format!(
+                "echo \"[error] unable to add hop {} -> {}\" due to {}",
                 name,
-                path.as_ref().display().to_string()
+                path.as_ref().display().to_string(),
+                e
             ),
         }
     }
@@ -104,7 +105,7 @@ impl Hopper {
             .map(|p| {
                 format!(
                     "{} -> {}",
-                    p.clone().split("/").last().unwrap(),
+                    p.clone().split("/").last().unwrap().split("\\").last().unwrap(),
                     fs::read_link(p).unwrap().display().to_string()
                 )
             })
@@ -118,7 +119,7 @@ impl Hopper {
             .unwrap()
             .map(|p| p.unwrap().path().display().to_string())
             .filter(|p| fs::metadata(p).unwrap().is_dir())
-            .map(|p| p.clone().split("/").last().unwrap().to_string())
+            .map(|p| p.clone().split("/").last().unwrap().split("\\").last().unwrap().to_string())
             .collect()
     }
 
