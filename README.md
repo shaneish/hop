@@ -45,6 +45,7 @@ git clone https://github.com/gnoat/hop.github
 cd hop
 make install
 ```
+note: if installing on a mac, make sure you are using gnu-sed and not apple's horrible frankenstein version of sed.
 
 the current build supports three different shells: nushell, zsh, and bash/dash.
 
