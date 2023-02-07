@@ -1,6 +1,6 @@
 # setup basic location variables
 export sh_loc="$(dirname -- "$0")/gitbash_runner.sh"
-export hopper_loc=$PWD/target/release/hop🐇
+export hopper_loc=$PWD/target/release/bhop
 cat $sh_loc > ./temp_sh
 sed -i "s|__HOPPERCMD__|$hopper_loc|g" ./temp_sh
 

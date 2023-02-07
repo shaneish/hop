@@ -1,5 +1,5 @@
 use dirs::home_dir;
-use hopper::hopper;
+use bhop::Hopper;
 use rand::Rng;
 use std::fs::{create_dir, remove_dir};
 use symlink;
@@ -7,7 +7,7 @@ use symlink;
 #[test]
 fn test_reading_toml() {
     let toml_str = "[defaults]\neditor=\"nvim\"";
-    let hopper = hopper::Hopper::from(toml_str, ".config/hop");
+    let hopper = Hopper::from(toml_str, ".config/hop");
 
     let expected = hopper::Config {
         defaults: hopper::Defaults {
