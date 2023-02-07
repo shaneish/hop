@@ -1,7 +1,7 @@
 
 # function that serves as a runner for `hopper`, allows program to change directory of current terminal
-def-env hop [cmd: string, p2: string = "", p3: string = ""] {
-    let command = (nu -c ($"HOPPERCMD ($cmd) ($p2) ($p3)" | str trim))
+def-env hp [cmd: string, p2: string = "", p3: string = ""] {
+    let command = (nu -c ($"__HOPPERCMD__ ($cmd) ($p2) ($p3)" | str trim))
     let new_loc = if ($command | str starts-with 'cd') {
         ($command | parse "{cmd} {dir}" | get dir | first)
     } else {

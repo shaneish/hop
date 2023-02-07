@@ -1,8 +1,10 @@
 use hopper;
-use std::{env, io};
 
 fn main() {
-    let big_hopper = hopper::Hopper::read();
     let big_command = hopper::args::Cmd::parse();
-    big_hopper.execute(big_command);
+    let big_hopper = hopper::Hopper::new();
+    match big_hopper {
+        Ok(mut hopper) => hopper.execute(big_command),
+        Err(e) => println!("[error] Unable to create hop instance: {}", e),
+    };
 }
