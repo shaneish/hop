@@ -52,15 +52,15 @@ the current build supports three different shells: nushell, zsh, and bash/dash.
 ### how to use
 to add a shortcut to your directory with the shortcut name `example`:
 ```zsh
-hop add example
+hp add example
 ```
 
 to jump to the `example` named directory:
 ```zsh
-hop example
+hp example
 ```
 
 to list all saved shortcuts:
 ```zsh
-hop ls
+hp ls
 ```
