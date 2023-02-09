@@ -1,4 +1,5 @@
 pub mod args;
+use args::{Cmd, Rabbit};
 use dirs::home_dir;
 use press_btn_continue;
 use serde_derive::Deserialize;
@@ -13,23 +14,13 @@ use std::{
 use toml::from_str;
 use sqlite;
 use anyhow;
+use colored::Colorize;
 
 #[derive(Deserialize, PartialEq, Debug)]
 pub struct Config {
     pub editor: String,
     pub max_history_entries: usize,
     pub ls_display_block: usize,
-}
-
-pub fn extract_path_ending<T: AsRef<Path>>(current_path: T) -> String {
-    let current_path_string = current_path.as_ref().display().to_string();
-    match current_path_string.rsplit_once("/") {
-        Some((_, end)) => end.to_string(),
-        None => match current_path_string.rsplit_once("\\") {
-            Some((_, end)) => end.to_string(),
-            None => current_path_string,
-        },
-    }
 }
 
 #[derive(Debug)]
@@ -80,6 +71,41 @@ impl Env {
     }
 }
 
+pub enum FTypes {
+    Rust,
+    Python,
+    IPython,
+    Markdown,
+    Text,
+    Go,
+    C,
+    Bash,
+    Nu,
+    Other,
+}
+
+impl FTypes {
+    pub fn from<T: AsRef<Path>>(input: T) -> Self {
+        let binding = input.as_ref().to_path_buf();
+        let ext_option = binding.extension();
+        match ext_option {
+            Some(ext) => match ext.to_str().expect("[error] Unable to extract extension.") {
+                "rs" => FTypes::Rust,
+                "py" => FTypes::Python,
+                "ipynb" => FTypes::IPython,
+                "md" => FTypes::Markdown,
+                "txt" => FTypes::Text,
+                "go" => FTypes::Go,
+                "c" => FTypes::C,
+                "sh" => FTypes::Bash,
+                "nu" => FTypes::Nu,
+                _ => FTypes::Other,
+            },
+            None => FTypes::Other,
+        }
+    }
+}
+
 // Suppressing assignment warnings as functionality that uses `config` will be added in the future.
 #[allow(dead_code)]
 pub struct Hopper {
@@ -108,7 +134,7 @@ impl Hopper {
         let configs = from_str(&toml_str).unwrap_or(Config {
             editor: "nvim".to_string(),
             max_history_entries: 200,
-            ls_display_block: 10,
+            ls_display_block: 0,
         });
         let conn = sqlite::open(&env.database_file)?;
         conn.execute(
@@ -132,39 +158,57 @@ impl Hopper {
         })
     }
 
-    pub fn add_hop<T: AsRef<Path>>(&mut self, path: T, name: &str) -> anyhow::Result<String> {
+    pub fn add_hop<T: AsRef<Path>>(&mut self, path: T, name: &str) -> anyhow::Result<()> {
         let query = format!(
             "INSERT OR REPLACE INTO named_hops (name, location) VALUES (\"{}\", \"{}\")",
             name,
             path.as_ref().display().to_string()
         );
         self.db.execute(&query)?;
-        Ok(format!("[info] Hop created for {}.", name))
+        println!("[info] Hop created for {}.", name);
+        Ok(())
     }
 
-    pub fn hop(&self, name: &str) -> anyhow::Result<String> {
-        let query = format!("SELECT location FROM named_hops WHERE name=\"{}\"", name);
-        let statement = self.db.prepare(&query)?;
-        let location = statement.read::<String, _>("location")?;
-        Ok(format!("__cd__:{}", location))
-    }
+    pub fn use_hop(&mut self, shortcut_name: String) -> anyhow::Result<()> {
+        let query = format!("SELECT location FROM named_hops WHERE name=\"{}\"", &shortcut_name);
+        let mut statement = self.db.prepare(&query)?;
+        while let Ok(sqlite::State::Row) = statement.next() {
+            let location = statement.read::<String, _>("location")?;
+            let location_path = PathBuf::from(&location);
+            if location_path.is_file() {
+                println!("__editor__ {} {}", self.config.editor, location);
+            } else {
+            println!("__cd__ {}", location);
+            }
+            return Ok(());
+        };
 
-    pub fn groove(&mut self, name: &str) -> anyhow::Result<String> {
-        match self.hop(name) {
-            Ok(cmd) => Ok(cmd),
-            Err(e) => match self.cd(name) {
-                Some((dir, n)) => {
-                    self.log_history(dir.clone(), n)?;
-                    Ok(format!("__cd__:{}", dir))
-                }
-                None => {
-                    Err(e)
-                }
+        match self.check_dir(&shortcut_name) {
+            Some((dir, short)) => {
+                self.log_history(dir.as_path().display().to_string(), short)?;
+                if dir.is_file() {
+                    println!("__editor__ {} {}", self.config.editor, dir.as_path().display().to_string());
+                } else {
+                    println!("__cd__ {}", dir.as_path().display().to_string());
+                };
+                Ok(())
             },
+            None => {
+                println!("[error] Unable to find referenced file or directory.");
+                Ok(())
+            }
         }
     }
 
-    pub fn log_history(&mut self, location: String, name: String) -> anyhow::Result<()> {
+    pub fn just_do_it(&mut self, bunny: Rabbit) -> anyhow::Result<()> {
+        match bunny {
+            Rabbit::File(hop_name, hop_path) => self.add_hop(hop_path, &hop_name),
+            Rabbit::Dir(hop_name, hop_path) => self.add_hop(hop_path, &hop_name),
+            Rabbit::Request(shortcut_name) => self.use_hop(shortcut_name),
+        }
+    }
+
+    pub fn log_history(&self, location: String, name: String) -> anyhow::Result<()> {
         let query = format!(
             "INSERT INTO history (time, name, location) VALUES ({}, \"{}\", \"{}\") ",
             Local::now().format("%Y%m%d%H%M%S"),
@@ -175,16 +219,16 @@ impl Hopper {
         Ok(())
     }
 
-    pub fn cd(&self, name: &str) -> Option<(String, String)> {
+    pub fn check_dir(&self, name: &str) -> Option<(PathBuf, String)> {
         read_dir(current_dir().unwrap())
             .expect("[error] Unable to search contents of current directory.")
             .filter(|f| f.is_ok())
-            .map(|f| f.unwrap().path())
-            .map(|f| (f.as_path().display().to_string(), extract_path_ending(f.to_path_buf())))
+            .map(|f| f.unwrap().path().to_path_buf())
+            .map(|f| (f.clone(), f.file_stem().expect("[error] Unable to disambiguate file/directory.").to_str().expect("[error] Unable to convert file/directory name to UTF-8.").to_string()))
             .find(|(_, path_end)| path_end == name)
     }
 
-    pub fn list_hops(&self) -> anyhow::Result<String> {
+    pub fn list_hops(&self) -> anyhow::Result<()> {
         let query = format!("SELECT name, location FROM named_hops");
         let mut query_result = self.db.prepare(&query)?;
         let mut hops: Vec<(String, String)> = Vec::new();
@@ -204,7 +248,7 @@ impl Hopper {
                     location,
                 )
             })
-            .map(|(ws, name, location)| format!("{}{}-> {}", name, ws, location))
+            .map(|(ws, name, location)| format!("{}{}{} {}", name.bold().cyan(), ws,"->".bright_white().bold(), location.green().bold()))
             .collect();
         formatted_hops.sort();
         for (idx, hop) in formatted_hops.into_iter().enumerate() {
@@ -214,7 +258,7 @@ impl Hopper {
                     .expect("[error] User input failed.");
             }
         }
-        Ok("".to_string())
+        Ok(())
     }
 
     pub fn hop_names(&self) -> anyhow::Result<Vec<String>> {
@@ -228,29 +272,21 @@ impl Hopper {
         Ok(hops)
     }
 
-    pub fn brb<T: AsRef<Path>>(&mut self, path: T) -> anyhow::Result<String> {
+    pub fn brb<T: AsRef<Path>>(&mut self, path: T) -> anyhow::Result<()> {
         self.add_hop(path.as_ref(), "back")?;
-        Ok("".to_string())
+        Ok(())
     }
 
-    pub fn execute(&mut self, cmd: args::Cmd) {
-        let output = match cmd {
-            args::Cmd::AddHop(name, loc) => self.add_hop(loc, &name),
-            args::Cmd::AddHopAndMove(name, loc) => {
-                match self.add_hop(loc, &name) {
-                    Ok(_) => self.groove(&name),
-                    Err(e) => Err(e),
-                }
-            },
-            args::Cmd::Move(name) => self.groove(&name),
-            args::Cmd::PrintMsg(msg) => Ok(msg),
-            args::Cmd::SetBrb(loc) => self.brb(loc),
-            args::Cmd::BrbHop => self.hop("back"),
-            args::Cmd::ListHops => self.list_hops(),
-        };
-        match output {
-            Ok(statement) => if statement.len() > 0 { println!("{}", statement) },
-            Err(e) => println!("[error] Unable to execute command: {}", e),
-        };
+    pub fn execute(&mut self, cmd: Cmd) -> anyhow::Result<()>{
+        match cmd {
+            Cmd::Use(bunny) => self.just_do_it(bunny),
+            Cmd::SetBrb(loc) => self.brb(loc),
+            Cmd::BrbHop => self.use_hop("back".to_string()),
+            Cmd::ListHops => self.list_hops(),
+            Cmd::PrintMsg(msg) => {
+                println!("{}", msg);
+                Ok(())
+            }
+        }
     }
 }

@@ -1,11 +1,12 @@
 
-# function that serves as a runner for `hopper`, allows program to change directory of current terminal
+# function that serves as a runner for `bhop`, allows program to change directory of current terminal
 hp() {
     export out=$(sh -c "__HOPPERCMD__ ${1} ${2} ${3}")
-    if [[ "$out" == "cd"* ]]; then
+    if [[ "$out" == "__cd__"* ]]; then
         export dir=$(echo ${out##*" "})
         cd $dir
-    else
+    elif [[ "$out" == "__editor__"* ]]; then
+        export edit_cmd=$(echo ${out##*" "})
         sh -c $out
     fi
 }
