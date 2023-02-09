@@ -14,9 +14,13 @@
 //    3) `version` and `v`: both commands to show current version info.
 //    4) `brb`: command to create a temporary shortcut to the current directory
 //        that can be jumped back to using the `hp back` command.
-use std::{env, path::{Path, PathBuf}};
 use colored::Colorize;
+use std::{
+    env,
+    path::{Path, PathBuf},
+};
 
+#[derive(Debug)]
 pub enum Rabbit {
     Dir(String, PathBuf),
     File(String, PathBuf),
@@ -27,7 +31,13 @@ impl Rabbit {
     pub fn from<T: AsRef<Path>>(input: T, name: Option<String>) -> Self {
         let current_name = match name {
             Some(given_name) => given_name,
-            None => input.as_ref().file_stem().expect("[error] Unable to disambiguate file/directory.").to_str().expect("[error] Unable to convert file/directory name to UTF-8.").to_string(),
+            None => input
+                .as_ref()
+                .file_name()
+                .expect("[error] Unable to disambiguate file/directory.")
+                .to_str()
+                .expect("[error] Unable to convert file/directory name to UTF-8.")
+                .to_string(),
         };
         if input.as_ref().is_dir() {
             Rabbit::Dir(current_name, input.as_ref().to_path_buf())
@@ -51,7 +61,8 @@ impl Cmd {
             Some(primary) => match primary.as_str() {
                 "add" => match env::args().nth(2) {
                     Some(f_or_d) => {
-                        let current_dir = env::current_dir().expect("[error] Unable to locate current working directory.");
+                        let current_dir = env::current_dir()
+                            .expect("[error] Unable to locate current working directory.");
                         let mut f_or_d_path = PathBuf::from(&current_dir);
                         f_or_d_path.push(&f_or_d);
                         if f_or_d_path.is_file() {
@@ -59,12 +70,23 @@ impl Cmd {
                         } else {
                             Cmd::Use(Rabbit::from(&current_dir, Some(f_or_d)))
                         }
-                    },
-                    None => Cmd::Use(Rabbit::from(env::current_dir().expect("[error] Unable to locate current working directory."), None)),
+                    }
+                    None => Cmd::Use(Rabbit::from(
+                        env::current_dir()
+                            .expect("[error] Unable to locate current working directory."),
+                        None,
+                    )),
                 },
                 "ls" => Cmd::ListHops,
-                "version" | "v" => Cmd::PrintMsg(format!("🐇 {} 🐇 {}{}", "Hop".cyan().bold(), "v.".bold(), env!("CARGO_PKG_VERSION").bright_white().bold())),
-                "brb" => Cmd::SetBrb(env::current_dir().expect("[error] Unable to add brb location.")),
+                "version" | "v" => Cmd::PrintMsg(format!(
+                    "🐇 {} 🐇 {}{}",
+                    "Hop".cyan().bold(),
+                    "v.".bold(),
+                    env!("CARGO_PKG_VERSION").bright_white().bold()
+                )),
+                "brb" => {
+                    Cmd::SetBrb(env::current_dir().expect("[error] Unable to add brb location."))
+                }
                 "back" => Cmd::BrbHop,
                 whatevs => Cmd::Use(Rabbit::Request(whatevs.to_string())),
             },

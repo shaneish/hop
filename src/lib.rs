@@ -1,9 +1,12 @@
 pub mod args;
+use anyhow;
 use args::{Cmd, Rabbit};
+use chrono::Local;
+use colored::Colorize;
 use dirs::home_dir;
 use press_btn_continue;
 use serde_derive::Deserialize;
-use chrono::Local;
+use sqlite;
 use std::{
     env::{current_dir, var},
     fs,
@@ -12,9 +15,6 @@ use std::{
     path::{Path, PathBuf},
 };
 use toml::from_str;
-use sqlite;
-use anyhow;
-use colored::Colorize;
 
 #[derive(Deserialize, PartialEq, Debug)]
 pub struct Config {
@@ -48,14 +48,15 @@ impl Env {
         let mut database_dir = match var("HOP_DATABASE_DIRECTORY") {
             Ok(loc) => PathBuf::from(&loc),
             Err(_) => {
-                let mut db_dir_temp = PathBuf::from(&format!("{}", &config_dir.as_path().display().to_string()));
+                let mut db_dir_temp =
+                    PathBuf::from(&format!("{}", &config_dir.as_path().display().to_string()));
                 db_dir_temp.push("db");
                 db_dir_temp
             }
         };
         if !Path::new(&database_dir).exists() {
             match fs::create_dir_all(&database_dir) {
-                Ok(_) => {},
+                Ok(_) => {}
                 Err(e) => println!("[error] Error creating database directory: {}", e),
             };
         };
@@ -141,7 +142,7 @@ impl Hopper {
             "CREATE TABLE IF NOT EXISTS named_hops (
             name TEXT PRIMARY KEY,
             location TEXT NOT NULL
-            )"
+            )",
         )?;
         conn.execute(
             "CREATE TABLE IF NOT EXISTS history (
@@ -170,7 +171,10 @@ impl Hopper {
     }
 
     pub fn use_hop(&mut self, shortcut_name: String) -> anyhow::Result<()> {
-        let query = format!("SELECT location FROM named_hops WHERE name=\"{}\"", &shortcut_name);
+        let query = format!(
+            "SELECT location FROM named_hops WHERE name=\"{}\"",
+            &shortcut_name
+        );
         let mut statement = self.db.prepare(&query)?;
         while let Ok(sqlite::State::Row) = statement.next() {
             let location = statement.read::<String, _>("location")?;
@@ -178,21 +182,25 @@ impl Hopper {
             if location_path.is_file() {
                 println!("__editor__ {} {}", self.config.editor, location);
             } else {
-            println!("__cd__ {}", location);
+                println!("__cd__ {}", location);
             }
             return Ok(());
-        };
+        }
 
         match self.check_dir(&shortcut_name) {
             Some((dir, short)) => {
                 self.log_history(dir.as_path().display().to_string(), short)?;
                 if dir.is_file() {
-                    println!("__editor__ {} {}", self.config.editor, dir.as_path().display().to_string());
+                    println!(
+                        "__editor__ {} {}",
+                        self.config.editor,
+                        dir.as_path().display().to_string()
+                    );
                 } else {
                     println!("__cd__ {}", dir.as_path().display().to_string());
                 };
                 Ok(())
-            },
+            }
             None => {
                 println!("[error] Unable to find referenced file or directory.");
                 Ok(())
@@ -224,7 +232,16 @@ impl Hopper {
             .expect("[error] Unable to search contents of current directory.")
             .filter(|f| f.is_ok())
             .map(|f| f.unwrap().path().to_path_buf())
-            .map(|f| (f.clone(), f.file_stem().expect("[error] Unable to disambiguate file/directory.").to_str().expect("[error] Unable to convert file/directory name to UTF-8.").to_string()))
+            .map(|f| {
+                (
+                    f.clone(),
+                    f.file_name()
+                        .expect("[error] Unable to disambiguate file/directory.")
+                        .to_str()
+                        .expect("[error] Unable to convert file/directory name to UTF-8.")
+                        .to_string(),
+                )
+            })
             .find(|(_, path_end)| path_end == name)
     }
 
@@ -248,7 +265,15 @@ impl Hopper {
                     location,
                 )
             })
-            .map(|(ws, name, location)| format!("{}{}{} {}", name.bold().cyan(), ws,"->".bright_white().bold(), location.green().bold()))
+            .map(|(ws, name, location)| {
+                format!(
+                    "{}{}{} {}",
+                    name.bold().cyan(),
+                    ws,
+                    "->".bright_white().bold(),
+                    location.green().bold()
+                )
+            })
             .collect();
         formatted_hops.sort();
         for (idx, hop) in formatted_hops.into_iter().enumerate() {
@@ -277,7 +302,7 @@ impl Hopper {
         Ok(())
     }
 
-    pub fn execute(&mut self, cmd: Cmd) -> anyhow::Result<()>{
+    pub fn execute(&mut self, cmd: Cmd) -> anyhow::Result<()> {
         match cmd {
             Cmd::Use(bunny) => self.just_do_it(bunny),
             Cmd::SetBrb(loc) => self.brb(loc),

@@ -1,6 +1,10 @@
-use bhop::{Hopper, args::Rabbit};
-use std::{env, fs::{create_dir, remove_dir_all}, path::PathBuf};
+use bhop::{args::Rabbit, Hopper};
 use serial_test::serial;
+use std::{
+    env,
+    fs::{create_dir, remove_dir_all},
+    path::PathBuf,
+};
 
 fn get_test_config() -> (PathBuf, bhop::Hopper) {
     let mut config_dir = PathBuf::from(&env::current_dir().unwrap());
@@ -10,7 +14,10 @@ fn get_test_config() -> (PathBuf, bhop::Hopper) {
         remove_dir_all(&config_dir).expect("Unable to delete temp test resources.")
     };
     create_dir(&config_dir).expect("Unable to create temp testing resource folder.");
-    env::set_var("HOP_CONFIG_DIRECTORY", &config_dir.as_path().display().to_string());
+    env::set_var(
+        "HOP_CONFIG_DIRECTORY",
+        &config_dir.as_path().display().to_string(),
+    );
     let hopper = bhop::Hopper::new().unwrap();
     (config_dir, hopper)
 }
