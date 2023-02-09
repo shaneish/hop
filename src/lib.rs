@@ -8,6 +8,7 @@ use press_btn_continue;
 use serde_derive::Deserialize;
 use sqlite;
 use std::{
+    collections::HashMap,
     env::{current_dir, var},
     fs,
     fs::read_dir,
@@ -18,7 +19,13 @@ use toml::from_str;
 
 #[derive(Deserialize, PartialEq, Debug)]
 pub struct Config {
-    pub editor: String,
+    pub settings: Settings,
+    pub editors: Option<HashMap<String, String>>,
+}
+
+#[derive(Deserialize, PartialEq, Debug)]
+pub struct Settings {
+    pub default_editor: String,
     pub max_history_entries: usize,
     pub ls_display_block: usize,
 }
@@ -71,42 +78,6 @@ impl Env {
         }
     }
 }
-
-pub enum FTypes {
-    Rust,
-    Python,
-    IPython,
-    Markdown,
-    Text,
-    Go,
-    C,
-    Bash,
-    Nu,
-    Other,
-}
-
-impl FTypes {
-    pub fn from<T: AsRef<Path>>(input: T) -> Self {
-        let binding = input.as_ref().to_path_buf();
-        let ext_option = binding.extension();
-        match ext_option {
-            Some(ext) => match ext.to_str().expect("[error] Unable to extract extension.") {
-                "rs" => FTypes::Rust,
-                "py" => FTypes::Python,
-                "ipynb" => FTypes::IPython,
-                "md" => FTypes::Markdown,
-                "txt" => FTypes::Text,
-                "go" => FTypes::Go,
-                "c" => FTypes::C,
-                "sh" => FTypes::Bash,
-                "nu" => FTypes::Nu,
-                _ => FTypes::Other,
-            },
-            None => FTypes::Other,
-        }
-    }
-}
-
 // Suppressing assignment warnings as functionality that uses `config` will be added in the future.
 #[allow(dead_code)]
 pub struct Hopper {
@@ -125,18 +96,15 @@ impl Hopper {
                     .expect("[error] Unable to create config directory."),
             )
             .expect("[error] Unable to create config directory.");
-            let mut new_conf = fs::File::create(env.config_file.clone())
-                .expect("[error] Unable to create config file.");
+            let mut new_conf =
+                fs::File::create(&env.config_file).expect("[error] Unable to create config file.");
             new_conf
-                .write_all(b"editor=\"nvim\"\nmax_history_entries=200\nls_display_block=0")
+                .write_all(b"[settings]\ndefault_editor=\"nvim\"\nmax_history_entries=200\nls_display_block=0")
                 .expect("[error] Unable to generate default config file.");
         };
         let toml_str: String = fs::read_to_string(env.config_file.clone()).unwrap();
-        let configs = from_str(&toml_str).unwrap_or(Config {
-            editor: "nvim".to_string(),
-            max_history_entries: 200,
-            ls_display_block: 0,
-        });
+        let configs: Config =
+            from_str(&toml_str).expect("[error] Unable to parse configuration TOML.");
         let conn = sqlite::open(&env.database_file)?;
         conn.execute(
             "CREATE TABLE IF NOT EXISTS named_hops (
@@ -180,7 +148,10 @@ impl Hopper {
             let location = statement.read::<String, _>("location")?;
             let location_path = PathBuf::from(&location);
             if location_path.is_file() {
-                println!("__editor__ {} {}", self.config.editor, location);
+                println!(
+                    "__cmd__ {} {}",
+                    self.config.settings.default_editor, location
+                );
             } else {
                 println!("__cd__ {}", location);
             }
@@ -191,9 +162,20 @@ impl Hopper {
             Some((dir, short)) => {
                 self.log_history(dir.as_path().display().to_string(), short)?;
                 if dir.is_file() {
+                    let ext_option = dir.extension();
+                    let editor = match &self.config.editors {
+                        Some(editor_map) => match ext_option {
+                            Some(ext) => match editor_map.get(&(ext.to_str().expect("[error] Cannot extract extension.").to_string())) {
+                                Some(special_editor) => special_editor,
+                                None => &self.config.settings.default_editor,
+                            },
+                            None => &self.config.settings.default_editor,
+                        },
+                        None => &self.config.settings.default_editor,
+                    };
                     println!(
-                        "__editor__ {} {}",
-                        self.config.editor,
+                        "__cmd__ {} {}",
+                        editor,
                         dir.as_path().display().to_string()
                     );
                 } else {
@@ -278,7 +260,9 @@ impl Hopper {
         formatted_hops.sort();
         for (idx, hop) in formatted_hops.into_iter().enumerate() {
             println!("{}", hop);
-            if (self.config.ls_display_block != 0) && (idx % self.config.ls_display_block == 0) {
+            if (self.config.settings.ls_display_block != 0)
+                && (idx % self.config.settings.ls_display_block == 0)
+            {
                 press_btn_continue::wait("Press any key to continue...")
                     .expect("[error] User input failed.");
             }
@@ -302,12 +286,49 @@ impl Hopper {
         Ok(())
     }
 
+    pub fn print_help() -> anyhow::Result<()> {
+        println!(
+            r#"
+{} {} {}
+    1) First argument is required.
+    2) Second argument is optional.
+
+Valid first argument commands are:
+    1) {}: command to add a shortcut to the current directory.
+        If a second argument is given, that argument is the name that will
+        be used to refer to the shortcut for future use.
+        If no second argument is given, the high level name will be used.
+    2) {}: command to list the current shortcuts and their names.
+    3) {} and {}: both commands to show current hopversion info.
+    4) {}: command to create a temporary shortcut to the current directory
+        that can be jumped back to using the {} {} command.
+    5) {}: Any other first arguments given will be checked to see if it
+        represents a valid directory/file to hop to.  This input can be a named
+        shortcut, a file/directory in the current directory, or a file/directory
+        from previous {} commands."#,
+            "hp".bold(),
+            "arg1".italic().dimmed(),
+            "arg2".italic().dimmed(),
+            "add".cyan().bold(),
+            "ls".cyan().bold(),
+            "version".cyan().bold(),
+            "v".cyan().bold(),
+            "brb".cyan().bold(),
+            "hp".bold(),
+            "back".italic().dimmed(),
+            "_".cyan().bold(),
+            "hp".bold()
+        );
+        Ok(())
+    }
+
     pub fn execute(&mut self, cmd: Cmd) -> anyhow::Result<()> {
         match cmd {
             Cmd::Use(bunny) => self.just_do_it(bunny),
             Cmd::SetBrb(loc) => self.brb(loc),
             Cmd::BrbHop => self.use_hop("back".to_string()),
             Cmd::ListHops => self.list_hops(),
+            Cmd::PrintHelp => Self::print_help(),
             Cmd::PrintMsg(msg) => {
                 println!("{}", msg);
                 Ok(())

@@ -25,3 +25,8 @@ anyhow = "1.0"
 sqlite = "0.30.4"
 colored = "2.0.0"
 serial_test = "1.0.0"
+tempdir = "0.3.7"
+
+[[bin]]
+name = "bhop"
+path = "src/main.rs"

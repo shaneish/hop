@@ -5,7 +5,7 @@ hp() {
     if [[ "$out" == "__cd__"* ]]; then
         export dir=$(echo ${out##*" "})
         cd $dir
-    elif [[ "$out" == "__editor__"* ]]; then
+    elif [[ "$out" == "__cmd__"* ]]; then
         export edit_cmd=$(echo ${out##*" "})
         sh -c $out
     fi

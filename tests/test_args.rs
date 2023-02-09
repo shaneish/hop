@@ -10,8 +10,8 @@ fn test_file_parse() {
         Rabbit::File(name, loc) => {
             assert_eq!(name, "README.md".to_string());
             assert_eq!(loc, test_file);
-        },
-        _ => assert!(false, "Rabbit::from() did not derive Rabbit::File variant.")
+        }
+        _ => assert!(false, "Rabbit::from() did not derive Rabbit::File variant."),
     };
 
     let nickname = "short".to_string();
@@ -20,7 +20,7 @@ fn test_file_parse() {
         Rabbit::File(name, loc) => {
             assert_eq!(nickname, name);
             assert_eq!(test_file, loc);
-        },
+        }
         _ => assert!(false, "Rabbit::from() did not derive Rabbit::File variant."),
     };
 }
@@ -34,8 +34,8 @@ fn test_dir_parse() {
         Rabbit::Dir(name, loc) => {
             assert_eq!(name, "tests".to_string());
             assert_eq!(loc, test_dir);
-        },
-        _ => assert!(false, "Rabbit::from() did not derive Rabbit::Dir variant.")
+        }
+        _ => assert!(false, "Rabbit::from() did not derive Rabbit::Dir variant."),
     };
 
     let nickname = "short".to_string();
@@ -44,7 +44,7 @@ fn test_dir_parse() {
         Rabbit::Dir(name, loc) => {
             assert_eq!(nickname, name);
             assert_eq!(test_dir, loc);
-        },
+        }
         _ => assert!(false, "Rabbit::from() did not derive Rabbit::File variant."),
     };
 }
