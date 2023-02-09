@@ -109,9 +109,9 @@ impl FTypes {
 // Suppressing assignment warnings as functionality that uses `config` will be added in the future.
 #[allow(dead_code)]
 pub struct Hopper {
-    config: Config,
-    env: Env,
-    db: sqlite::Connection,
+    pub config: Config,
+    pub env: Env,
+    pub db: sqlite::Connection,
 }
 
 impl Hopper {

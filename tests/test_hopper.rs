@@ -1,51 +1,49 @@
-use dirs::home_dir;
-use bhop::Hopper;
-use rand::Rng;
-use std::fs::{create_dir, remove_dir};
-use symlink;
+use bhop::{Hopper, args::Rabbit};
+use std::{env, fs::{create_dir, remove_dir_all}, path::PathBuf};
+use serial_test::serial;
 
-#[test]
-fn test_reading_toml() {
-    let toml_str = "[defaults]\neditor=\"nvim\"";
-    let hopper = Hopper::from(toml_str, ".config/hop");
-
-    let expected = hopper::Config {
-        defaults: hopper::Defaults {
-            editor: "nvim".to_string(),
-        },
+fn get_test_config() -> (PathBuf, bhop::Hopper) {
+    let mut config_dir = PathBuf::from(&env::current_dir().unwrap());
+    config_dir.push("tests");
+    config_dir.push("test_resources");
+    if config_dir.exists() {
+        remove_dir_all(&config_dir).expect("Unable to delete temp test resources.")
     };
-
-    assert_eq!(hopper.config, expected);
+    create_dir(&config_dir).expect("Unable to create temp testing resource folder.");
+    env::set_var("HOP_CONFIG_DIRECTORY", &config_dir.as_path().display().to_string());
+    let hopper = bhop::Hopper::new().unwrap();
+    (config_dir, hopper)
 }
 
 #[test]
-fn test_list_files() {
-    let home_dir = home_dir().unwrap();
-    let temp_dir_name = format!("temp_test_dir-{}", rand::thread_rng().gen::<u32>());
-    create_dir(home_dir.join(&temp_dir_name)).unwrap();
-    println!("{:?}", home_dir.join(&temp_dir_name));
-    let new_sym = symlink::symlink_dir(
-        format!(
-            "{}/{}",
-            home_dir
-                .join(&temp_dir_name)
-                .into_os_string()
-                .into_string()
-                .unwrap(),
-            "test"
-        ),
-        "/",
-    );
-    match new_sym {
-        Ok(_) => {
-            let hopper = hopper::Hopper::new(&temp_dir_name);
-            let expected = "echo \"test -> /\"";
+#[serial]
+fn test_initializing_resources() {
+    let (config_dir, _) = get_test_config();
+    let curr_dir = config_dir.clone();
+    let mut new_toml = curr_dir.clone();
+    new_toml.push("hop.toml");
+    assert!(new_toml.exists(), "TOML wasn't created.");
+    assert!(new_toml.is_file(), "TOML isn't a file.");
 
-            assert_eq!(hopper.list_hops(), expected);
-            remove_dir(home_dir.join(&temp_dir_name)).unwrap();
-        }
-        Err(_) => {
-            remove_dir(home_dir.join(&temp_dir_name)).unwrap();
-        }
-    }
+    let mut new_db = curr_dir.clone();
+    new_db.push("db");
+    assert!(new_db.exists(), "DB directory wasn't created.");
+    assert!(new_db.is_dir(), "DB directory isn't a directory.");
+
+    new_db.push("hop.sqlite");
+    assert!(new_db.exists(), "DB file wasn't created.");
+    assert!(new_db.is_file(), "DB file isn't a file.");
+}
+
+#[test]
+#[serial]
+fn test_read_configs() {
+    let (_, hopper) = get_test_config();
+    let default_config = bhop::Config {
+        editor: "nvim".to_string(),
+        max_history_entries: 200,
+        ls_display_block: 0,
+    };
+
+    assert_eq!(hopper.config, default_config);
 }
