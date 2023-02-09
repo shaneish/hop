@@ -2,6 +2,11 @@
 name = "bhop"
 version = "0.1.0"
 edition = "2021"
+readme = "README.md"
+description = "Small CLI tool to help you hop around the shell."
+homepage = "https://github.com/gnoat/hop"
+repository = "https://github.com/gnoat/hop"
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
