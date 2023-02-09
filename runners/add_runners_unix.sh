@@ -1,7 +1,7 @@
 # setup basic location variables
 export sh_loc="$(dirname -- "$0")/runner.sh"
 export nu_loc="$(dirname -- "$0")/runner.nu"
-export hopper_loc=$PWD/target/release/hopper
+export hopper_loc=$PWD/target/release/bhop
 cat $sh_loc > ./temp_sh
 cat $nu_loc > ./temp_nu
 sed -i "s|HOPPERCMD|$hopper_loc|g" ./temp_sh ./temp_nu

@@ -1,8 +1,8 @@
-use hopper;
+use bhop;
 use std::{env, io};
 
 fn main() -> io::Result<()> {
-    let hopper = hopper::hopper::Hopper::new(".config/hop");
+    let hopper = bhop::hopper::Hopper::new(".config/hop");
 
     let output: String = match env::args().nth(1) {
         Some(cmd) => match cmd.as_str() {

@@ -1,5 +1,5 @@
 use dirs::home_dir;
-use hopper::hopper;
+use bhop::hopper;
 use rand::Rng;
 use std::fs::{create_dir, remove_dir};
 use symlink;
