@@ -1,6 +1,6 @@
 [package]
 name = "bhop"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["Shane Stephenson <stephenson.shane.a@gmail.com>"]
 readme = "README.md"
@@ -14,9 +14,18 @@ keywords = ["cli", "cd", "hop", "navigate", "shortcut"]
 
 [dependencies]
 dirs = "4.0.0"
-rand = "0.8.5"
 serde = "1.0.152"
 serde_derive = "1.0.152"
-symlink = "0.1.0"
 tempfile = "3.3.0"
 toml = "0.5.10"
+press-btn-continue = "0.1.1"
+chrono = "0.4.23"
+anyhow = "1.0"
+sqlite = "0.30.4"
+colored = "2.0.0"
+serial_test = "1.0.0"
+tempdir = "0.3.7"
+
+[[bin]]
+name = "bhop"
+path = "src/main.rs"
