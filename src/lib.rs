@@ -9,6 +9,7 @@ use serde_derive::Deserialize;
 use sqlite;
 use std::{
     collections::HashMap,
+    env::current_exe,
     env::{current_dir, var},
     fs,
     fs::read_dir,
@@ -138,6 +139,30 @@ impl Hopper {
         Ok(())
     }
 
+    pub fn remove_hop(&mut self, bunny: args::Rabbit) -> anyhow::Result<()> {
+        let output_pair = match bunny {
+            args::Rabbit::RequestName(name) => {
+                Some((format!("name=\"{}\"", name), format!("shortcut: {}", name)))
+            }
+            args::Rabbit::RequestPath(loc) => Some((
+                format!("location=\"{}\"", loc.as_path().display().to_string()),
+                format!("location: {}", loc.as_path().display().to_string()),
+            )),
+            _ => None,
+        };
+        match output_pair {
+            Some((q, n)) => match self
+                .db
+                .execute(&format!("DELETE FROM named_hops WHERE {}", q))
+            {
+                Ok(_) => println!("[info] Hop removed for {}.", n),
+                Err(e) => println!("[error] Unable to remove {}, for error: {}", n, e),
+            },
+            None => println!("[error] Unable to determine hop to remove."),
+        };
+        Ok(())
+    }
+
     pub fn use_hop(&mut self, shortcut_name: String) -> anyhow::Result<()> {
         let query = format!(
             "SELECT location FROM named_hops WHERE name=\"{}\"",
@@ -165,7 +190,12 @@ impl Hopper {
                     let ext_option = dir.extension();
                     let editor = match &self.config.editors {
                         Some(editor_map) => match ext_option {
-                            Some(ext) => match editor_map.get(&(ext.to_str().expect("[error] Cannot extract extension.").to_string())) {
+                            Some(ext) => match editor_map.get(
+                                &(ext
+                                    .to_str()
+                                    .expect("[error] Cannot extract extension.")
+                                    .to_string()),
+                            ) {
                                 Some(special_editor) => special_editor,
                                 None => &self.config.settings.default_editor,
                             },
@@ -173,11 +203,7 @@ impl Hopper {
                         },
                         None => &self.config.settings.default_editor,
                     };
-                    println!(
-                        "__cmd__ {} {}",
-                        editor,
-                        dir.as_path().display().to_string()
-                    );
+                    println!("__cmd__ {} {}", editor, dir.as_path().display().to_string());
                 } else {
                     println!("__cd__ {}", dir.as_path().display().to_string());
                 };
@@ -194,7 +220,8 @@ impl Hopper {
         match bunny {
             Rabbit::File(hop_name, hop_path) => self.add_hop(hop_path, &hop_name),
             Rabbit::Dir(hop_name, hop_path) => self.add_hop(hop_path, &hop_name),
-            Rabbit::Request(shortcut_name) => self.use_hop(shortcut_name),
+            Rabbit::RequestName(shortcut_name) => self.use_hop(shortcut_name),
+            Rabbit::RequestPath(_) => Ok(()),
         }
     }
 
@@ -261,9 +288,9 @@ impl Hopper {
         for (idx, hop) in formatted_hops.into_iter().enumerate() {
             println!("{}", hop);
             if (self.config.settings.ls_display_block != 0)
-                && (idx % self.config.settings.ls_display_block == 0)
+                && ((idx + 1) % self.config.settings.ls_display_block == 0)
             {
-                press_btn_continue::wait("Press any key to continue...")
+                press_btn_continue::wait(&format!("{}\n", "Press_any_key_to_continue...".dimmed()))
                     .expect("[error] User input failed.");
             }
         }
@@ -322,17 +349,36 @@ Valid first argument commands are:
         Ok(())
     }
 
+    pub fn runner(&self, cmd: String) -> anyhow::Result<()> {
+        let bhop_exe = current_exe()
+            .expect("[error] Unable to extract current bhop executable name.")
+            .into_os_string()
+            .to_str()
+            .expect("[error] Unable to convert current bhop executable path to UTF-8.")
+            .to_string();
+        println!("__cmd__ {} {}", bhop_exe, cmd);
+        Ok(())
+    }
+
     pub fn execute(&mut self, cmd: Cmd) -> anyhow::Result<()> {
         match cmd {
+            Cmd::Passthrough(cmd) => self.runner(cmd),
             Cmd::Use(bunny) => self.just_do_it(bunny),
             Cmd::SetBrb(loc) => self.brb(loc),
             Cmd::BrbHop => self.use_hop("back".to_string()),
             Cmd::ListHops => self.list_hops(),
             Cmd::PrintHelp => Self::print_help(),
+            Cmd::Remove(bunny) => self.remove_hop(bunny),
             Cmd::PrintMsg(msg) => {
                 println!("{}", msg);
                 Ok(())
             }
         }
+    }
+}
+
+impl Default for Hopper {
+    fn default() -> Self {
+        Self::new().expect("[error] Unable to create a hopper.")
     }
 }

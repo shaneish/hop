@@ -32,7 +32,8 @@ use std::{
 pub enum Rabbit {
     Dir(String, PathBuf),
     File(String, PathBuf),
-    Request(String),
+    RequestName(String),
+    RequestPath(PathBuf),
 }
 
 impl Rabbit {
@@ -57,21 +58,23 @@ impl Rabbit {
 
 pub enum Cmd {
     Use(Rabbit),
+    Remove(Rabbit),
     PrintMsg(String),
     SetBrb(PathBuf),
     BrbHop,
     ListHops,
     PrintHelp,
+    Passthrough(String),
 }
 
 impl Cmd {
     pub fn parse() -> Self {
+        let current_dir =
+            env::current_dir().expect("[error] Unable to locate current working directory.");
         match env::args().nth(1) {
             Some(primary) => match primary.as_str() {
                 "add" => match env::args().nth(2) {
                     Some(f_or_d) => {
-                        let current_dir = env::current_dir()
-                            .expect("[error] Unable to locate current working directory.");
                         let mut f_or_d_path = PathBuf::from(&current_dir);
                         f_or_d_path.push(&f_or_d);
                         if f_or_d_path.is_file() {
@@ -86,8 +89,14 @@ impl Cmd {
                         None,
                     )),
                 },
-                "ls" => Cmd::ListHops,
-                "version" | "v" => Cmd::PrintMsg(format!(
+                "rm" | "remove" => match env::args().nth(2) {
+                    Some(name) => Cmd::Remove(Rabbit::RequestName(name)),
+                    None => Cmd::Remove(Rabbit::RequestPath(current_dir.to_path_buf())),
+                },
+                "ls" | "list" => Cmd::Passthrough("show_ls".to_string()),
+                "show_ls" => Cmd::ListHops,
+                "version" | "v" => Cmd::Passthrough("show_version".to_string()),
+                "show_version" => Cmd::PrintMsg(format!(
                     "🐇{}🐇 {}{}",
                     "bhop[hp]".cyan().bold(),
                     "v.".bold(),
@@ -97,8 +106,9 @@ impl Cmd {
                     Cmd::SetBrb(env::current_dir().expect("[error] Unable to add brb location."))
                 }
                 "back" => Cmd::BrbHop,
-                "help" => Cmd::PrintHelp,
-                whatevs => Cmd::Use(Rabbit::Request(whatevs.to_string())),
+                "help" => Cmd::Passthrough("show_help".to_string()),
+                "show_help" => Cmd::PrintHelp,
+                whatevs => Cmd::Use(Rabbit::RequestName(whatevs.to_string())),
             },
             None => Cmd::PrintMsg("[error] Unable to parse current arguments.".to_string()),
         }

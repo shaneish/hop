@@ -1,41 +1,50 @@
-#!/usr/bin/env python3
-
 # Script to easily build `hp` command, even on systems without solid Bash support like Windows
+
 from pathlib import Path
+from sys import argv
 import os
 from subprocess import run, PIPE
 
 
-with open("runner.nu", "r") as f:
-    nu_script = f.read()
+_HP_FUNC_START = "\n## hop runner begin ##"
+_HP_FUNC_END = "\n## hop runner end ##"
 
-with open("runner.sh", "r") as f:
-    sh_script = f.read()
 
-root_dir = Path(os.path.realpath(__file__)).parent.absolute()
-exec_path = root_dir / "target" / "release" / "bhop"
-nu_script = nu_script.replace("__HOPPERCMD__", str(exec_path))
-sh_script = nu_script.replace("__HOPPERCMD__", str(exec_path))
+def add_runner(config: Path, shell: str):
+    print("Adding hp runner to ", shell)
+    if shell == "nushell":
+        ext = "nu"
+    else:
+        ext = "sh"
+    root_dir = Path(os.path.realpath(__file__)).parent.absolute()
+    exe_dir = Path(root_dir).parent.absolute() / "target" / "release" / "bhop"
+    with open(root_dir / f"runner.{ext}", "r") as f:
+        script = f.read().replace("__HOPPERCMD__", str(exe_dir).replace(os.sep, "/"))
+    with open(config, "r+") as f:
+        current_shell_conf = f.read()
+        if _HP_FUNC_START in current_shell_conf:
+            new_script = (
+                current_shell_conf.split(_HP_FUNC_START)[0]
+                + current_shell_conf.split(_HP_FUNC_END)[-1]
+            )
+            f.write(new_script)
+    with open(config, "a") as f:
+        f.write(_HP_FUNC_START)
+        f.write(
+            "\n# Below function that serves as a runner for `bhop`, allows program to change directory of current terminal location.\n"
+        )
+        f.write(script)
+        f.write(_HP_FUNC_END)
 
-if os.path.isfile("~/.zsh"):
-    with open("~/.zsh", "ra") as f:
-        if "hp()" in f.read():
-            print("Unable to add for zsh as a function hp() is already defined in .zsh.")
-        else:
-            f.write(sh_script)
 
-if os.path.isfile("~/.bashrc"):
-    with open("~/.bashrc", "ra") as f:
-        if "hp()" in f.read():
-            print("Unable to add for bash as a function hp() is already defined in .bashrc.")
-        else:
-            f.write(sh_script)
-
-nu_check = run(['nu', '-c', '$nu.env-path'], stdout=PIPE)
-if nu_check.returncode == 0:
-    nu_env_path = nu_check.stdout.decode("utf-8").strip()
-    with open(nu_env_path, "ra") as f:
-        if "def-env hp" in f.read():
-            print("Unable to add for nushell as a function hp() is already defined.")
-        else:
-            f.write(nu_script)
+if __name__ == "__main__":
+    home_dir = Path(os.path.expanduser("~"))
+    if ("zsh" in argv) or (len(argv) < 2):
+        add_runner(home_dir / ".zshrc", "zsh")
+    if ("sh" in argv) or (len(argv) < 2):
+        add_runner(home_dir / ".bashrc", "bash/dash")
+    if ("nu" in argv) or (len(argv) < 2):
+        nu_check = run(["nu", "-c", "$nu.env-path"], stdout=PIPE)
+        if nu_check.returncode == 0:
+            nu_env_path = Path(nu_check.stdout.decode("utf-8").strip())
+            add_runner(nu_env_path, "nushell")
