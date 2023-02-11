@@ -65,7 +65,6 @@ the current build supports three different shells: nushell, zsh, and bash/dash/a
 for general usage help:
 ```zsh
 hp help # show basic commands
-
 hp version # show version
 ```
 to add a shortcut to your directory with the shortcut name `example`:
@@ -79,15 +78,12 @@ hp add
 to add a shortcut to a file that can be opened up in the set editor, use:
 ```zsh
 hp add init.vim # will create a shortcut to init.vim named `init.vim`
-
 hp add init.vim vi # will create a shortcut to init.vim named `vi`
 ```
 to delete a shortcut with name `example`:
 ```zsh
 hp rm example # can be used from any location
-
 hp rm # can be used within the "example" directory
-
 hp remove example # long form of rm command
 ```
 to jump to the `example` named directory:
