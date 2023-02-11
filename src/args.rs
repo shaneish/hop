@@ -73,10 +73,10 @@ impl Cmd {
                     Some(name) => Cmd::Remove(Rabbit::RequestName(name)),
                     None => Cmd::Remove(Rabbit::RequestPath(current_dir.to_path_buf())),
                 },
-                "ls" | "list" => Cmd::Passthrough("show_ls".to_string()),
-                "show_ls" => Cmd::ListHops,
-                "version" | "v" => Cmd::Passthrough("show_version".to_string()),
-                "show_version" => Cmd::PrintMsg(format!(
+                "ls" | "list" => Cmd::Passthrough("_ls".to_string()),
+                "_ls" => Cmd::ListHops,
+                "version" | "v" => Cmd::Passthrough("_version".to_string()),
+                "_version" => Cmd::PrintMsg(format!(
                     "{} 🐇 {}{}",
                     "bunnyhop".cyan().bold(),
                     "v.".bold(),
@@ -86,8 +86,8 @@ impl Cmd {
                     Cmd::SetBrb(env::current_dir().expect("[error] Unable to add brb location."))
                 }
                 "back" => Cmd::BrbHop,
-                "help" => Cmd::Passthrough("show_help".to_string()),
-                "show_help" => Cmd::PrintHelp,
+                "help" => Cmd::Passthrough("_help".to_string()),
+                "_help" => Cmd::PrintHelp,
                 whatevs => Cmd::Use(Rabbit::RequestName(whatevs.to_string())),
             },
             None => Cmd::PrintMsg("[error] Unable to parse current arguments.".to_string()),

@@ -27,7 +27,7 @@ pub struct Config {
 #[derive(Deserialize, PartialEq, Debug)]
 pub struct Settings {
     pub default_editor: String,
-    pub max_history_entries: usize,
+    pub max_history: usize,
     pub ls_display_block: usize,
 }
 
@@ -100,7 +100,7 @@ impl Hopper {
             let mut new_conf =
                 fs::File::create(&env.config_file).expect("[error] Unable to create config file.");
             new_conf
-                .write_all(b"[settings]\ndefault_editor=\"nvim\"\nmax_history_entries=200\nls_display_block=0")
+                .write_all(b"[settings]\ndefault_editor=\"nvim\"\nmax_history=0\nls_display_block=0")
                 .expect("[error] Unable to generate default config file.");
         };
         let toml_str: String = fs::read_to_string(env.config_file.clone()).unwrap();
@@ -163,6 +163,25 @@ impl Hopper {
         Ok(())
     }
 
+    fn map_editor<T: AsRef<Path>>(&self, f: T) -> String {
+        let ext_option = f.as_ref().extension();
+        match &self.config.editors {
+            Some(editor_map) => match ext_option {
+                Some(ext) => match editor_map.get(
+                    &(ext
+                        .to_str()
+                        .expect("[error] Cannot extract extension.")
+                        .to_string()),
+                ) {
+                    Some(special_editor) => special_editor.to_string(),
+                    None => self.config.settings.default_editor.to_string(),
+                },
+                None => self.config.settings.default_editor.to_string(),
+            },
+            None => self.config.settings.default_editor.to_string(),
+        }
+    }
+
     pub fn use_hop(&mut self, shortcut_name: String) -> anyhow::Result<()> {
         let query = format!(
             "SELECT location FROM named_hops WHERE name=\"{}\"",
@@ -173,9 +192,10 @@ impl Hopper {
             let location = statement.read::<String, _>("location")?;
             let location_path = PathBuf::from(&location);
             if location_path.is_file() {
+                let editor = self.map_editor(&location_path);
                 println!(
                     "__cmd__ {} {}",
-                    self.config.settings.default_editor, location
+                    editor, location
                 );
             } else {
                 println!("__cd__ {}", location);
@@ -187,22 +207,7 @@ impl Hopper {
             Some((dir, short)) => {
                 self.log_history(dir.as_path().display().to_string(), short)?;
                 if dir.is_file() {
-                    let ext_option = dir.extension();
-                    let editor = match &self.config.editors {
-                        Some(editor_map) => match ext_option {
-                            Some(ext) => match editor_map.get(
-                                &(ext
-                                    .to_str()
-                                    .expect("[error] Cannot extract extension.")
-                                    .to_string()),
-                            ) {
-                                Some(special_editor) => special_editor,
-                                None => &self.config.settings.default_editor,
-                            },
-                            None => &self.config.settings.default_editor,
-                        },
-                        None => &self.config.settings.default_editor,
-                    };
+                    let editor = self.map_editor(&dir);
                     println!("__cmd__ {} {}", editor, dir.as_path().display().to_string());
                 } else {
                     println!("__cd__ {}", dir.as_path().display().to_string());
@@ -226,13 +231,23 @@ impl Hopper {
     }
 
     pub fn log_history(&self, location: String, name: String) -> anyhow::Result<()> {
-        let query = format!(
-            "INSERT INTO history (time, name, location) VALUES ({}, \"{}\", \"{}\") ",
-            Local::now().format("%Y%m%d%H%M%S"),
-            name,
-            location
-        );
-        self.db.execute(&query)?;
+        if self.config.settings.max_history > 0 {
+            let query = format!(
+                "INSERT INTO history (time, name, location) VALUES ({}, \"{}\", \"{}\") ",
+                Local::now().format("%Y%m%d%H%M%S"),
+                name,
+                location
+            );
+            self.db.execute(&query)?;
+            let mut count_result = self.db.prepare("SELECT COUNT(*) AS hist_count, MIN(time) AS hist_min FROM history")?;
+            if let Ok(sqlite::State::Row) = count_result.next() {
+                let history_count = count_result.read::<i64, _>("hist_count")?;
+                let history_min = count_result.read::<String, _>("hist_min")?;
+                if history_count > self.config.settings.max_history as i64 {
+                    self.db.execute(&format!("DELETE FROM history WHERE time=\"{}\"", history_min))?;
+                };
+            };
+        };
         Ok(())
     }
 

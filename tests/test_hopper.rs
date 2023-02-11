@@ -46,7 +46,7 @@ fn test_read_default_configs() {
     let default_config = bunnyhop::Config {
         settings: Settings {
             default_editor: "nvim".to_string(),
-            max_history_entries: 200,
+            max_history: 0,
             ls_display_block: 0,
         },
         editors: None,
@@ -65,7 +65,7 @@ fn test_read_configs_with_alt_editors() {
     alt_toml.push("hop.toml");
     let mut alt_toml_file =
         fs::File::create(&alt_toml).expect("Unable to create alternate hop.toml.");
-    alt_toml_file.write_all(b"[settings]\ndefault_editor=\"vi\"\nmax_history_entries=100\nls_display_block=10\n[editors]\npy=\"nano\"\nipynb=\"code\"\nrust=\"nvim\"").expect("Unable to generate alternate hop.toml.");
+    alt_toml_file.write_all(b"[settings]\ndefault_editor=\"vi\"\nmax_history=100\nls_display_block=10\n[editors]\npy=\"nano\"\nipynb=\"code\"\nrust=\"nvim\"").expect("Unable to generate alternate hop.toml.");
     let hopper = get_test_hopper(&config_dir);
     let expected_editors = HashMap::from_iter(
         [("py", "nano"), ("ipynb", "code"), ("rust", "nvim")]
@@ -75,7 +75,7 @@ fn test_read_configs_with_alt_editors() {
     let default_config = bunnyhop::Config {
         settings: Settings {
             default_editor: "vi".to_string(),
-            max_history_entries: 100,
+            max_history: 100,
             ls_display_block: 10,
         },
         editors: Some(expected_editors),
