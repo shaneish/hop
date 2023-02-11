@@ -47,13 +47,6 @@ to install from a bash-type shell, use:
 ```zsh
 git clone https://github.com/gnoat/hop.github
 cd hop
-make install
-```
-
-to install from nushell, use:
-```zsh
-git clone https://github.com/gnoat/hop.github
-cd hop
 make all
 ```
 
