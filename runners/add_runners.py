@@ -39,12 +39,21 @@ def add_runner(config: Path, shell: str):
 
 if __name__ == "__main__":
     home_dir = Path(os.path.expanduser("~"))
+    zsh_dir = Path(os.environ.get('HOP_ZSH_CONFIG_DIRECTORY', home_dir / ".zshrc"))
+    sh_dir = Path(os.environ.get('HOP_BASH_CONFIG_DIRECTORY', home_dir / ".bashrc"))
+    nu_dir = os.environ.get('HOP_ZSH_CONFIG_DIRECTORY', None)
     if ("zsh" in argv) or (len(argv) < 2):
         add_runner(home_dir / ".zshrc", "zsh")
     if ("sh" in argv) or (len(argv) < 2):
         add_runner(home_dir / ".bashrc", "bash/dash")
     if ("nu" in argv) or (len(argv) < 2):
-        nu_check = run(["nu", "-c", "$nu.env-path"], stdout=PIPE)
-        if nu_check.returncode == 0:
-            nu_env_path = Path(nu_check.stdout.decode("utf-8").strip())
-            add_runner(nu_env_path, "nushell")
+        nu_dir_default = home_dir / ".config" / "nushell" / "env.nu"
+        if nu_dir is None:
+            nu_check = run(["nu", "-c", "$nu.env-path"], stdout=PIPE)
+            if nu_check.returncode == 0:
+                nu_dir_correct = Path(nu_check.stdout.decode("utf-8").strip())
+            else:
+                nu_dir_correct = nu_dir_default
+        else:
+            nu_dir_correct = Path(nu_dir)
+        add_runner(nu_dir_correct, "nushell")

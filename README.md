@@ -39,15 +39,27 @@ def-env short [p1: string, p2: string = ""] {
 however, as these are separate scripts for the various shells i use (nushell for personal, bash and zsh for work), i've found it very annoying to have to update the same script three times every time i want to add a new feature.  `hop` is supposed to replicate the behavior of `short`, but in a single language so it's easily updated between various shells.
 
 ### how to install
-simply clone this repo and run "make install" from the root repo directory:
+simply clone this repo and run `make` from the root repo directory.
+
+current install script that works on the most systems with the most shells requires a system install of `python3`.
+
+to install from a bash-type shell, use:
 ```zsh
 git clone https://github.com/gnoat/hop.github
 cd hop
 make install
 ```
-note: if installing on a mac, make sure you are using gnu-sed and not apple's horrible frankenstein version of sed.
 
-the current build supports three different shells: nushell, zsh, and bash/dash.
+to install from nushell, use:
+```zsh
+git clone https://github.com/gnoat/hop.github
+cd hop
+make nu-install
+```
+
+note: if installing on a mac and using the `make unix` option, ensure sure you are using gnu-sed and not apple's horrible frankenstein version of sed.
+
+the current build supports three different shells: nushell, zsh, and bash/dash/anything else that use ~/.bashrc.
 
 ### how to use
 to add a shortcut to your directory with the shortcut name `example`:
