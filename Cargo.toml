@@ -1,5 +1,5 @@
 [package]
-name = "bhop"
+name = "bunnyhop"
 version = "0.2.0"
 edition = "2021"
 authors = ["Shane Stephenson <stephenson.shane.a@gmail.com>"]
@@ -27,5 +27,5 @@ serial_test = "1.0.0"
 tempdir = "0.3.7"
 
 [[bin]]
-name = "bhop"
+name = "bunnyhop"
 path = "src/main.rs"

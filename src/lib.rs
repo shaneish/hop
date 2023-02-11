@@ -325,11 +325,12 @@ Valid first argument commands are:
         If a second argument is given, that argument is the name that will
         be used to refer to the shortcut for future use.
         If no second argument is given, the high level name will be used.
-    2) {}: command to list the current shortcuts and their names.
-    3) {} and {}: both commands to show current hopversion info.
+    2) {} or {}: command to list the current shortcuts and their names.
+    3) {} or {}: both commands to show current hop version info.
     4) {}: command to create a temporary shortcut to the current directory
         that can be jumped back to using the {} {} command.
-    5) {}: Any other first arguments given will be checked to see if it
+    5) {} or {}: command to remove the shortcut specified by {}.
+    6) {}: Any other first arguments given will be checked to see if it
         represents a valid directory/file to hop to.  This input can be a named
         shortcut, a file/directory in the current directory, or a file/directory
         from previous {} commands."#,
@@ -338,11 +339,15 @@ Valid first argument commands are:
             "arg2".italic().dimmed(),
             "add".cyan().bold(),
             "ls".cyan().bold(),
-            "version".cyan().bold(),
+            "list".cyan().bold(),
             "v".cyan().bold(),
+            "version".cyan().bold(),
             "brb".cyan().bold(),
             "hp".bold(),
             "back".italic().dimmed(),
+            "rm".cyan().bold(),
+            "remove".cyan().bold(),
+            "arg2".italic().dimmed(),
             "_".cyan().bold(),
             "hp".bold()
         );
@@ -350,13 +355,13 @@ Valid first argument commands are:
     }
 
     pub fn runner(&self, cmd: String) -> anyhow::Result<()> {
-        let bhop_exe = current_exe()
-            .expect("[error] Unable to extract current bhop executable name.")
+        let bunnyhop_exe = current_exe()
+            .expect("[error] Unable to extract current bunnyhop executable name.")
             .into_os_string()
             .to_str()
-            .expect("[error] Unable to convert current bhop executable path to UTF-8.")
+            .expect("[error] Unable to convert current bunnyhop executable path to UTF-8.")
             .to_string();
-        println!("__cmd__ {} {}", bhop_exe, cmd);
+        println!("__cmd__ {} {}", bunnyhop_exe, cmd);
         Ok(())
     }
 

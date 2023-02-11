@@ -1,9 +1,9 @@
-use bhop::{args::Rabbit, Hopper, Settings};
+use bunnyhop::{args::Rabbit, Hopper, Settings};
 use serial_test::serial;
 use std::{collections::HashMap, env, fs, io::Write, path::PathBuf};
 use tempdir::TempDir;
 
-fn get_test_hopper(config_dir: &PathBuf) -> bhop::Hopper {
+fn get_test_hopper(config_dir: &PathBuf) -> bunnyhop::Hopper {
     env::set_var(
         "HOP_CONFIG_DIRECTORY",
         config_dir.as_path().display().to_string(),
@@ -43,7 +43,7 @@ fn test_read_default_configs() {
     let config_dir = PathBuf::from(&temp_dir.path());
     let hopper = get_test_hopper(&config_dir);
     println!("{:?}", hopper.config);
-    let default_config = bhop::Config {
+    let default_config = bunnyhop::Config {
         settings: Settings {
             default_editor: "nvim".to_string(),
             max_history_entries: 200,
@@ -72,7 +72,7 @@ fn test_read_configs_with_alt_editors() {
             .iter()
             .map(|(a, b)| (a.to_string(), b.to_string())),
     );
-    let default_config = bhop::Config {
+    let default_config = bunnyhop::Config {
         settings: Settings {
             default_editor: "vi".to_string(),
             max_history_entries: 100,

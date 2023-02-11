@@ -62,17 +62,41 @@ note: if installing on a mac and using the `make unix` option, ensure sure you a
 the current build supports three different shells: nushell, zsh, and bash/dash/anything else that use ~/.bashrc.
 
 ### how to use
+for general usage help:
+```zsh
+hp help # show basic commands
+
+hp version # show version
+```
 to add a shortcut to your directory with the shortcut name `example`:
 ```zsh
 hp add example
 ```
+to add a shortcut to your current directory and use the current directory high level name as the shortcut name:
+```zsh
+hp add
+```
+to add a shortcut to a file that can be opened up in the set editor, use:
+```zsh
+hp add init.vim # will create a shortcut to init.vim named `init.vim`
 
+hp add init.vim vi # will create a shortcut to init.vim named `vi`
+```
+to delete a shortcut with name `example`:
+```zsh
+hp rm example # can be used from any location
+
+hp rm # can be used within the "example" directory
+
+hp remove example # long form of rm command
+```
 to jump to the `example` named directory:
 ```zsh
 hp example
 ```
-
 to list all saved shortcuts:
 ```zsh
-hp ls
+hp ls # shortened form
+hp list # long form
 ```
+

@@ -1,6 +1,0 @@
-echo "Running unit tests..."
-cargo test
-echo "Building bhop..."
-cargo build --release
-echo "Adding hp shell runners for bhop..."
-python3 runners/add_runners.py

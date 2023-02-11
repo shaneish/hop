@@ -1,8 +1,8 @@
-use bhop;
+use bunnyhop;
 
 fn main() {
-    let big_command = bhop::args::Cmd::parse();
-    let big_hopper = bhop::Hopper::new();
+    let big_command = bunnyhop::args::Cmd::parse();
+    let big_hopper = bunnyhop::Hopper::new();
     match big_hopper {
         Ok(mut hopper) => match hopper.execute(big_command) {
             Ok(_) => {}

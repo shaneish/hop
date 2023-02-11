@@ -1,27 +1,7 @@
 // Enum used to parse input arguments.  Ended up rolling my own arg parser instead of using an
 // existing crate because I wanted `hp` commands to be more natural language-like and use dynamic
 // positional commands
-//
-// hp $1 $2
-//    1) First argument is required.
-//    2) Second argument is optional.
-//
-// Valid first argument commands are:
-//    1) `add`: command to add a shortcut to the current directory.
-//        - If a second argument is given, that argument is the name that
-//            will be used to refer to the shortcut for future use
-//        - If no second argument is given, the high level name of the current
-//            directory will be added as the shortcut name.  As an example, if
-//            the current directory is "~/.config/hop" and `hp add` is called,
-//            it will create a shortcut to "~/.config/hop" named "hop"
-//    2) `ls`: command to list the current shortcuts and their names.
-//    3) `version` and `v`: both commands to show current version info.
-//    4) `brb`: command to create a temporary shortcut to the current directory
-//        that can be jumped back to using the `hp back` command.
-//    5) `_`: Any other first arguments given will be checked to see if it
-//        represents a valid directory/file to hop to.  This input can be a named
-//        shortcut, a file/directory in the current directory, or a file/directory
-//        from previous `hp` commands.
+
 use colored::Colorize;
 use std::{
     env,
@@ -97,8 +77,8 @@ impl Cmd {
                 "show_ls" => Cmd::ListHops,
                 "version" | "v" => Cmd::Passthrough("show_version".to_string()),
                 "show_version" => Cmd::PrintMsg(format!(
-                    "🐇{}🐇 {}{}",
-                    "bhop[hp]".cyan().bold(),
+                    "{} 🐇 {}{}",
+                    "bunnyhop".cyan().bold(),
                     "v.".bold(),
                     env!("CARGO_PKG_VERSION").bright_white().bold()
                 )),
