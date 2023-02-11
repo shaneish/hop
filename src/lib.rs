@@ -8,6 +8,7 @@ use press_btn_continue;
 use serde_derive::Deserialize;
 use sqlite;
 use std::{
+    include_str,
     collections::HashMap,
     env::current_exe,
     env::{current_dir, var},
@@ -44,14 +45,14 @@ impl Env {
             Ok(loc) => PathBuf::from(&loc),
             Err(_) => {
                 home_dir.push(".config");
-                home_dir.push("hop");
+                home_dir.push("bunnyhop");
                 home_dir
             }
         };
         let mut hop_config_file = PathBuf::from(&config_dir);
         match var("HOP_CONFIG_FILE_NAME") {
             Ok(name) => hop_config_file.push(name),
-            Err(_) => hop_config_file.push("hop.toml"),
+            Err(_) => hop_config_file.push("bunnyhop.toml"),
         };
         let mut database_dir = match var("HOP_DATABASE_DIRECTORY") {
             Ok(loc) => PathBuf::from(&loc),
@@ -70,7 +71,7 @@ impl Env {
         };
         match var("HOP_DATABASE_FILE_NAME") {
             Ok(name) => database_dir.push(name),
-            Err(_) => database_dir.push("hop.sqlite"),
+            Err(_) => database_dir.push("bunnyhop.db"),
         };
 
         Env {
@@ -79,8 +80,7 @@ impl Env {
         }
     }
 }
-// Suppressing assignment warnings as functionality that uses `config` will be added in the future.
-#[allow(dead_code)]
+
 pub struct Hopper {
     pub config: Config,
     pub env: Env,
@@ -99,8 +99,9 @@ impl Hopper {
             .expect("[error] Unable to create config directory.");
             let mut new_conf =
                 fs::File::create(&env.config_file).expect("[error] Unable to create config file.");
+            static DEFAULT_CONFIGS: &str = include_str!("defaults/defaults.toml");
             new_conf
-                .write_all(b"[settings]\ndefault_editor=\"nvim\"\nmax_history=0\nls_display_block=0")
+                .write_all(DEFAULT_CONFIGS.as_bytes())
                 .expect("[error] Unable to generate default config file.");
         };
         let toml_str: String = fs::read_to_string(env.config_file.clone()).unwrap();
@@ -128,7 +129,7 @@ impl Hopper {
         })
     }
 
-    pub fn add_hop<T: AsRef<Path>>(&mut self, path: T, name: &str) -> anyhow::Result<()> {
+    fn add_hop<T: AsRef<Path>>(&mut self, path: T, name: &str) -> anyhow::Result<()> {
         let query = format!(
             "INSERT OR REPLACE INTO named_hops (name, location) VALUES (\"{}\", \"{}\")",
             name,
@@ -139,7 +140,7 @@ impl Hopper {
         Ok(())
     }
 
-    pub fn remove_hop(&mut self, bunny: args::Rabbit) -> anyhow::Result<()> {
+    fn remove_hop(&mut self, bunny: args::Rabbit) -> anyhow::Result<()> {
         let output_pair = match bunny {
             args::Rabbit::RequestName(name) => {
                 Some((format!("name=\"{}\"", name), format!("shortcut: {}", name)))
@@ -182,7 +183,7 @@ impl Hopper {
         }
     }
 
-    pub fn use_hop(&mut self, shortcut_name: String) -> anyhow::Result<()> {
+    fn use_hop(&mut self, shortcut_name: String) -> anyhow::Result<()> {
         let query = format!(
             "SELECT location FROM named_hops WHERE name=\"{}\"",
             &shortcut_name
@@ -221,7 +222,7 @@ impl Hopper {
         }
     }
 
-    pub fn just_do_it(&mut self, bunny: Rabbit) -> anyhow::Result<()> {
+    fn just_do_it(&mut self, bunny: Rabbit) -> anyhow::Result<()> {
         match bunny {
             Rabbit::File(hop_name, hop_path) => self.add_hop(hop_path, &hop_name),
             Rabbit::Dir(hop_name, hop_path) => self.add_hop(hop_path, &hop_name),
@@ -230,7 +231,7 @@ impl Hopper {
         }
     }
 
-    pub fn log_history(&self, location: String, name: String) -> anyhow::Result<()> {
+    fn log_history(&self, location: String, name: String) -> anyhow::Result<()> {
         if self.config.settings.max_history > 0 {
             let query = format!(
                 "INSERT INTO history (time, name, location) VALUES ({}, \"{}\", \"{}\") ",
@@ -251,7 +252,7 @@ impl Hopper {
         Ok(())
     }
 
-    pub fn check_dir(&self, name: &str) -> Option<(PathBuf, String)> {
+    fn check_dir(&self, name: &str) -> Option<(PathBuf, String)> {
         read_dir(current_dir().unwrap())
             .expect("[error] Unable to search contents of current directory.")
             .filter(|f| f.is_ok())
@@ -269,7 +270,7 @@ impl Hopper {
             .find(|(_, path_end)| path_end == name)
     }
 
-    pub fn list_hops(&self) -> anyhow::Result<()> {
+    fn list_hops(&self) -> anyhow::Result<()> {
         let query = format!("SELECT name, location FROM named_hops");
         let mut query_result = self.db.prepare(&query)?;
         let mut hops: Vec<(String, String)> = Vec::new();
@@ -312,43 +313,14 @@ impl Hopper {
         Ok(())
     }
 
-    pub fn hop_names(&self) -> anyhow::Result<Vec<String>> {
-        let query = format!("SELECT name FROM named_hops");
-        let mut query_result = self.db.prepare(&query)?;
-        let mut hops: Vec<String> = Vec::new();
-        while let Ok(sqlite::State::Row) = query_result.next() {
-            let name = query_result.read::<String, _>("name")?;
-            hops.push(name);
-        }
-        Ok(hops)
-    }
-
-    pub fn brb<T: AsRef<Path>>(&mut self, path: T) -> anyhow::Result<()> {
+    fn brb<T: AsRef<Path>>(&mut self, path: T) -> anyhow::Result<()> {
         self.add_hop(path.as_ref(), "back")?;
         Ok(())
     }
 
-    pub fn print_help() -> anyhow::Result<()> {
+    fn print_help() -> anyhow::Result<()> {
         println!(
-            r#"
-{} {} {}
-    1) First argument is required.
-    2) Second argument is optional.
-
-Valid first argument commands are:
-    1) {}: command to add a shortcut to the current directory.
-        If a second argument is given, that argument is the name that will
-        be used to refer to the shortcut for future use.
-        If no second argument is given, the high level name will be used.
-    2) {} or {}: command to list the current shortcuts and their names.
-    3) {} or {}: both commands to show current hop version info.
-    4) {}: command to create a temporary shortcut to the current directory
-        that can be jumped back to using the {} {} command.
-    5) {} or {}: command to remove the shortcut specified by {}.
-    6) {}: Any other first arguments given will be checked to see if it
-        represents a valid directory/file to hop to.  This input can be a named
-        shortcut, a file/directory in the current directory, or a file/directory
-        from previous {} commands."#,
+            include!("defaults/help.txt"),
             "hp".bold(),
             "arg1".italic().dimmed(),
             "arg2".italic().dimmed(),
@@ -369,7 +341,7 @@ Valid first argument commands are:
         Ok(())
     }
 
-    pub fn runner(&self, cmd: String) -> anyhow::Result<()> {
+    fn runner(&self, cmd: String) -> anyhow::Result<()> {
         let bunnyhop_exe = current_exe()
             .expect("[error] Unable to extract current bunnyhop executable name.")
             .into_os_string()

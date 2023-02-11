@@ -1,0 +1,20 @@
+"
+{} {} {}
+    1) First argument is required.
+    2) Second argument is optional.
+
+Valid first argument commands are:
+    1) {}: command to add a shortcut to the current directory.
+        If a second argument is given, that argument is the name that will
+        be used to refer to the shortcut for future use.
+        If no second argument is given, the high level name will be used.
+    2) {} or {}: command to list the current shortcuts and their names.
+    3) {} or {}: both commands to show current hop version info.
+    4) {}: command to create a temporary shortcut to the current directory
+        that can be jumped back to using the {} {} command.
+    5) {} or {}: command to remove the shortcut specified by {}.
+    6) {}: Any other first arguments given will be checked to see if it
+        represents a valid directory/file to hop to.  This input can be a named
+        shortcut, a file/directory in the current directory, or a file/directory
+        from previous {} commands.
+"
