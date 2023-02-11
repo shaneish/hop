@@ -49,9 +49,7 @@ cd hop
 make all
 ```
 
-note: if installing on a mac and using the `make unix` option, ensure sure you are using gnu-sed and not apple's horrible frankenstein version of sed.
-
-the current build supports three different shells: nushell, zsh, and bash/dash/anything else that use ~/.bashrc.
+the current build supports four different shells: nushell, zsh, powershell, and bash/dash/anything else that use ~/.bashrc.
 
 ### how to use
 for general usage help:
