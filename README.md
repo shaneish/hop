@@ -54,7 +54,7 @@ to install from nushell, use:
 ```zsh
 git clone https://github.com/gnoat/hop.github
 cd hop
-make nu-install
+make all
 ```
 
 note: if installing on a mac and using the `make unix` option, ensure sure you are using gnu-sed and not apple's horrible frankenstein version of sed.
