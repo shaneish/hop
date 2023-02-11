@@ -43,7 +43,6 @@ simply clone this repo and run `make` from the root repo directory.
 
 current install script that works on the most systems with the most shells requires a system install of `python3`.
 
-to install from a bash-type shell, use:
 ```zsh
 git clone https://github.com/gnoat/hop.github
 cd hop
