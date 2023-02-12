@@ -1,6 +1,6 @@
 [package]
 name = "bunnyhop"
-version = "0.2.0"
+version = "0.2.2"
 edition = "2021"
 authors = ["Shane Stephenson <stephenson.shane.a@gmail.com>"]
 readme = "README.md"
