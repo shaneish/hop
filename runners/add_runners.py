@@ -20,7 +20,7 @@ def add_runner(config, shell, alias="hp", ext="sh", source="source"):
     root_dir = Path(os.path.realpath(__file__)).parent.absolute()
     exe_dir = Path(root_dir).parent.absolute() / "target" / "release" / "bunnyhop"
     conf_file = config.parent.absolute() / f".hop.{ext}"
-    source_cmd = f"{source} {str(conf_file).replace(os.sep, '/')}"
+    source_cmd = f"{source} \"{str(conf_file).replace(os.sep, '/')}\""
     with open(root_dir / f"runner.{ext}", "r") as f:
         script = f.read().replace("__HOPPERCMD__", str(exe_dir).replace(os.sep, "/")).replace("__FUNCTION_ALIAS__", alias)
     with open(conf_file, "w") as f:
