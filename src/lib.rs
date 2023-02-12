@@ -4,8 +4,8 @@ use args::{Cmd, Rabbit};
 use chrono::Local;
 use colored::Colorize;
 use dirs::home_dir;
-use press_btn_continue;
 use serde_derive::Deserialize;
+use proceed::any_or_quit_with;
 use sqlite;
 use std::{
     include_str,
@@ -306,8 +306,10 @@ impl Hopper {
             if (self.config.settings.ls_display_block != 0)
                 && ((idx + 1) % self.config.settings.ls_display_block == 0)
             {
-                press_btn_continue::wait(&format!("{}\n", "Press_any_key_to_continue...".dimmed()))
-                    .expect("[error] User input failed.");
+                println!("{}", "Press 'Enter' to continue or 'q' to quit...".dimmed());
+                if !any_or_quit_with('q') {
+                    return Ok(());
+                }
             }
         }
         Ok(())

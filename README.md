@@ -17,7 +17,11 @@ short() {
     fi
 }
 ```
-however, as this required maintaining separate scripts for the various shells i use (nushell for personal, bash and zsh for work), i've found it very annoying to have to update the same script multiple times every time i want to add a new feature.  `hop` is supposed to replicate the behavior of `short`, but in a single language so it's easily updated between various shells.  this iteration also includes many improvements over the very simple shell function used before (and doesn't clutter you're system with unnecessary symlinks).
+however, as this required maintaining separate scripts for the various shells i use (nushell for personal, bash and zsh for work), i've found it very annoying to have to update the same script multiple times every time i want to add a new feature.
+
+`hop` is supposed to replicate the behavior of `short`, but in a single language so it's easily updated between various shells.
+
+this iteration also includes many improvements over the very simple shell function used before (and doesn't clutter you're system with unnecessary symlinks).
 
 ### how to install
 simply clone this repo and run `make` from the root repo directory.
@@ -30,7 +34,7 @@ curl https://sh.rustup.rs -sSf | sh
 ```
 once `cargo` is installed, simply run the following to install `hop`:
 ```zsh
-git clone https://github.com/gnoat/hop.github --branch v0.2.2
+git clone https://github.com/gnoat/hop.github
 cd hop
 make all
 ```
@@ -70,3 +74,7 @@ to list all saved shortcuts:
 hp ls # shortened form
 hp list # long form
 ```
+### custom configuration
+by default, you can find the configuration file for `hop` at `~/.config/bunnyhop/bunnyhop.toml`.
+
+check out the config file to see the current options available and to set your personal editors (default is `vi` for everything).
