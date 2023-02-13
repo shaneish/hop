@@ -459,13 +459,21 @@ impl Hopper {
     }
 
     fn retrieve_history(&self) -> anyhow::Result<Vec<(String, String)>> {
-        let query = format!("SELECT name, t.location from (SELECT name, location, COUNT(location) AS cnt FROM history GROUP BY location)t INNER JOIN (SELECT location, MAX(name) FROM history GROUP BY location) v ON t.location = v.location");
+        let query = format!(
+            "SELECT name, location, COUNT(location) AS cntl
+            FROM history GROUP BY name, location
+            ORDER by cntl DESC"
+        );
         let mut query_result = self.db.prepare(&query)?;
         let mut hops: Vec<(String, String)> = Vec::new();
+        let mut names: Vec<String> = Vec::new();
         while let Ok(sqlite::State::Row) = query_result.next() {
             let name = query_result.read::<String, _>("name")?;
             let location = query_result.read::<String, _>("location")?;
-            hops.push((name, location));
+            if !names.contains(&name) {
+                names.push(name.clone());
+                hops.push((name, location));
+            }
         }
         Ok(hops)
     }
