@@ -10,8 +10,7 @@ use sqlite;
 use std::{
     include_str,
     collections::HashMap,
-    env::current_exe,
-    env::{current_dir, var},
+    env::{current_dir, var, current_exe, consts},
     fs,
     fs::read_dir,
     io::Write,
@@ -99,9 +98,12 @@ impl Hopper {
             .expect("[error] Unable to create config directory.");
             let mut new_conf =
                 fs::File::create(&env.config_file).expect("[error] Unable to create config file.");
-            static DEFAULT_CONFIGS: &str = include_str!("defaults/defaults.toml");
+            let default_configs: &str = match consts::OS {
+                "windows" => include_str!("defaults/windows_defaults.toml"),
+                _ => include_str!("defaults/unix_defaults.toml"),
+            };
             new_conf
-                .write_all(DEFAULT_CONFIGS.as_bytes())
+                .write_all(default_configs.as_bytes())
                 .expect("[error] Unable to generate default config file.");
         };
         let toml_str: String = fs::read_to_string(env.config_file.clone()).unwrap();
@@ -181,6 +183,19 @@ impl Hopper {
             },
             None => self.config.settings.default_editor.to_string(),
         }
+    }
+
+    fn find_hop(&self, shortcut_name: String) -> anyhow::Result<()> {
+        let query = format!(
+            "SELECT location FROM named_hops WHERE name=\"{}\"",
+            &shortcut_name
+        );
+        let mut statement = self.db.prepare(&query)?;
+        while let Ok(sqlite::State::Row) = statement.next() {
+            let location = statement.read::<String, _>("location")?;
+            println!("{}", location);
+        }
+        Ok(())
     }
 
     fn use_hop(&mut self, shortcut_name: String) -> anyhow::Result<()> {
@@ -354,6 +369,20 @@ impl Hopper {
         Ok(())
     }
 
+    fn configure(&self) -> anyhow::Result<()> {
+        let editor = self.map_editor(&self.env.config_file);
+        println!("__cmd__ {} {}", editor, &self.env.config_file.display().to_string());
+        Ok(())
+
+    }
+
+    fn show_locations(&self) -> anyhow::Result<()> {
+        println!("{}    {} {}", "Config Directory".magenta().bold(), "->".bold(), &self.env.config_file.parent().expect("[error] Unable to locate current config directory.").display().to_string().yellow().bold());
+        println!("{}  {} {}", "Database Directory".magenta().bold(), "->".bold(), &self.env.database_file.parent().expect("[error] Unable to locate current database directory.").display().to_string().yellow().bold());
+        println!("{} {} {}", "Bunnyhop Executable".magenta().bold(), "->".bold(), current_exe().expect("[error] Unable to locate current bunnyhop executable.").display().to_string().yellow().bold());
+        Ok(())
+    }
+
     pub fn execute(&mut self, cmd: Cmd) -> anyhow::Result<()> {
         match cmd {
             Cmd::Passthrough(cmd) => self.runner(cmd),
@@ -363,6 +392,9 @@ impl Hopper {
             Cmd::ListHops => self.list_hops(),
             Cmd::PrintHelp => Self::print_help(),
             Cmd::Remove(bunny) => self.remove_hop(bunny),
+            Cmd::Configure => self.configure(),
+            Cmd::LocateBunnyhop => self.show_locations(),
+            Cmd::LocateShortcut(name) => self.find_hop(name),
             Cmd::PrintMsg(msg) => {
                 println!("{}", msg);
                 Ok(())

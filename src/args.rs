@@ -45,6 +45,9 @@ pub enum Cmd {
     ListHops,
     PrintHelp,
     Passthrough(String),
+    LocateBunnyhop,
+    LocateShortcut(String),
+    Configure,
 }
 
 impl Cmd {
@@ -88,6 +91,12 @@ impl Cmd {
                 "back" => Cmd::BrbHop,
                 "help" => Cmd::Passthrough("_help".to_string()),
                 "_help" => Cmd::PrintHelp,
+                "config" | "configure" => Cmd::Configure,
+                "locate" => match env::args().nth(2) {
+                    Some(name) => Cmd::LocateShortcut(name),
+                    None => Cmd::Passthrough("_locate_bunnyhop".to_string()),
+                },
+                "_locate_bunnyhop" => Cmd::LocateBunnyhop,
                 whatevs => Cmd::Use(Rabbit::RequestName(whatevs.to_string())),
             },
             None => Cmd::PrintMsg("[error] Unable to parse current arguments.".to_string()),

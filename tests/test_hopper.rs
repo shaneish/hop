@@ -12,6 +12,13 @@ fn get_test_hopper(config_dir: &PathBuf) -> bunnyhop::Hopper {
     hopper
 }
 
+fn get_default_editor() -> String {
+    match env::consts::OS {
+        "windows" => "notepad".to_string(),
+        _ => "vi".to_string(),
+    }
+}
+
 #[test]
 #[serial]
 fn test_initializing_resources() {
@@ -45,7 +52,7 @@ fn test_read_default_configs() {
     println!("{:?}", hopper.config);
     let default_config = bunnyhop::Config {
         settings: Settings {
-            default_editor: "vi".to_string(),
+            default_editor: get_default_editor(),
             max_history: 300,
             ls_display_block: 0,
         },

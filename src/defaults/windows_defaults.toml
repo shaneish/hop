@@ -1,0 +1,58 @@
+[settings]
+# Use this to set the default editor for opening
+# shortcuts to files.
+#
+# For Windows users, the default editor will be set to `notepad`.
+# For Unix users (Linux/MacOS), the default editor will be set
+# to `vi`.
+default_editor="notepad"
+
+# Use this to set the maximum number of saved entries
+# in the bunnyhop command history table.
+#
+# If set to 0, will continue to history indefinitely
+# without removing.
+max_history=300
+
+# Use this choose how to display the results of the `ls`
+# or `list` command.
+#
+# If set to 0, will print out the entire list of shortcuts
+# at once.
+#
+# If set to some integer N > 0,
+# it will display N shortcuts at once and wait for a keypress
+# before displaying the next N shortcuts.
+ls_display_block=0
+
+[editors]
+# Use this section to define alternate editors for individual
+# file extensions.  Set the extension on the right and the command
+# to open the editor for that extension on the right.
+#
+# If a file is opened without a specified extension, the default
+# editor will be used to open it.
+#
+# For example, use Jupyter Notebooks with IPython files, you can set:
+#
+#       ipynb="jupyter-notebook"
+#
+# and anytime bunnyhop is used to open a shortcut to a .ipynb file,
+# it will open it in Jupyter.
+#
+# As another example, if you want to open normal Python files in
+# VSCode, you can set:
+#
+#       py="code"
+#
+# If you want to open Scala files in Intellij, you can set:
+#
+#       sc="idea"
+#       scala="idea"
+#       sbt="idea"
+#
+# Note that it had to be defined for all of the relevant
+# Scala file extensions.
+#
+# I pretty much just use Neovim (the GOAT) for everything but
+# notebooks.  For notebooks I use: `ipynb="euporia-notebook"`
