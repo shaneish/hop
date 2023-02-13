@@ -5,7 +5,7 @@ i have a bash/zsh/nushell function named `short` that lets users jump to predefi
 
 the basic zsh function that i originally used was defined as:
 
-```bash
+```console
 short() {
     if [[ "$1" == "add" ]]; then
         if [ ! -f  ~/.config/.shorts/${2} ]; then
@@ -29,11 +29,11 @@ simply clone this repo and run `make` from the root repo directory.
 current install script that works on the most systems with the most shells requires a system install of `python3` and `cargo`.
 
 if you currently don't have `rust` or `cargo` set up on your system, just run the following command before installing `bunnyhop`
-```bash
+```console
 curl https://sh.rustup.rs -sSf | sh
 ```
 once `cargo` is installed, simply run the following to install `bunnyhop`:
-```bash
+```console
 git clone https://github.com/gnoat/hop.github
 cd hop
 make all
@@ -41,133 +41,118 @@ make all
 the default runner alias set is `hp`, use this to call `bunnyhop` from the command line (unless you set a custom alias).
 
 once everything is installed and the shell hooks added, you can open the config file to set your editor and other preferences by simply typing:
-```bash
-hp configure
+```console
+foo@bar:~$ configure
 ```
 the current build supports four different shells: nushell, zsh, powershell, and bash/dash/anything else that use ~/.bashrc.
 
 to see where all your configuration resources were provisioned, use:
-```bash
-hp locate
-
->>> Config Directory    -> C:\Users\steph\.config\bunnyhop
->>> Database Directory  -> C:\Users\steph\.config\bunnyhop\db
->>> Bunnyhop Executable -> C:\Users\steph\Projects\hop\target\release\bunnyhop.exe
+```console
+foo@bar:~$ locate
+Config Directory    -> C:\Users\steph\.config\bunnyhop
+Database Directory  -> C:\Users\steph\.config\bunnyhop\db
+Bunnyhop Executable -> C:\Users\steph\Projects\hop\target\release\bunnyhop.exe
 ```
 
 ### how to use
 for general usage help:
-```bash
-hp help # show basic commands
+```console
+foo@bar:~$ help # show basic commands
+hp arg1 arg2
+    1) First argument is required.
+    2) Second argument is optional.
 
->>> hp arg1 arg2
->>>     1) First argument is required.
->>>     2) Second argument is optional.
->>> 
->>>         If a second argument is given, that argument is the name that will
->>>         be used to refer to the shortcut for future use.
->>>         If no second argument is given, the high level name will be used.
->>>     2) ls or list: command to list the current shortcuts and their names.
->>>     3) v or version: both commands to show current hop version info.
->>>     4) brb: command to create a temporary shortcut to the current directory
->>>         that can be jumped back to using the hp back command.
->>>     5) rm or remove: command to remove the shortcut specified by configure.
->>>     6) edit: open a file or directory within your editor of choice.
->>>     7) config or locate: open your bunnyhop configuration file.
->>>     8) arg2: show all relevant installation directories if no second argument
->>>         is given.  If second argument is given, list the full path to the given
->>>         argument.
->>>     10) _: Any other first arguments given will be checked to see if it
->>>         represents a valid directory/file to hop to.  This input can be a named
->>>         shortcut, a file/directory in the current directory, or a file/directory
->>>         from previous hp commands.
+        If a second argument is given, that argument is the name that will
+        be used to refer to the shortcut for future use.
+        If no second argument is given, the high level name will be used.
+    2) ls or list: command to list the current shortcuts and their names.
+    3) v or version: both commands to show current hop version info.
+    4) brb: command to create a temporary shortcut to the current directory
+        that can be jumped back to using the foo@bar:~$ back command.
+    5) rm or remove: command to remove the shortcut specified by configure.
+    6) edit: open a file or directory within your editor of choice.
+    7) config or locate: open your bunnyhop configuration file.
+    8) arg2: show all relevant installation directories if no second argument
+        is given.  If second argument is given, list the full path to the given
+        argument.
+    10) _: Any other first arguments given will be checked to see if it
+        represents a valid directory/file to hop to.  This input can be a named
+        shortcut, a file/directory in the current directory, or a file/directory
+        from previous foo@bar:~$ commands.
 
-hp version # show version
-
->>> bunnyhop 🐇 v.0.2.4
+foo@bar:~$ version # show version
+bunnyhop 🐇 v.0.2.4
 ```
 to add a shortcut to your directory with the shortcut name `example`:
-```bash
-hp add example
-
->>> [info] Hop created for example.
+```console
+foo@bar:~$ add example
+[info] Hop created for example.
 ```
 to add a shortcut to your current directory and use the current directory high level name as the shortcut name:
-```bash
+```console
 echo $PWD
+/usr/bin/cargo
 
->>> /usr/bin/cargo
-
-hp add
-
->>> [info] Hop created for cargo.
+foo@bar:~$ add
+[info] Hop created for cargo.
 ```
 to add a shortcut to a file that can be opened up in the set editor, use:
-```bash
-hp add init.vim # will create a shortcut to init.vim named `init.vim`
+```console
+foo@bar:~$ add init.vim # will create a shortcut to init.vim named `init.vim`
+[info] Hop created for init.vim.
 
->>> [info] Hop created for init.vim.
-
-hp add init.vim vi # will create a shortcut to init.vim named `vi`
-
->>> [info] Hop created for vi.
+foo@bar:~$ add init.vim vi # will create a shortcut to init.vim named `vi`
+[info] Hop created for vi.
 ```
 to open a shortcut file in your configured editor of choice, use either of the following:
-```bash
-hp edit init.vim # full command consistent with opening a directory for editing
-hp init.vim # shortened command that just works for editing files and not directories
+```console
+foo@bar:~$ edit init.vim # full command consistent with opening a directory for editing
+
+foo@bar:~$ init.vim # shortened command that just works for editing files and not directories
 ```
 to delete a shortcut with name `example`:
-```bash
-hp rm example # can be used from any location
-
->>> [info] Hop removed for shortcut: example.
+```console
+foo@bar:~$ rm example # can be used from any location
+[info] Hop removed for shortcut: example.
 
 echo $PWD
+C:\Users\you\Documents\example
 
->>> C:\Users\you\Documents\example
+foo@bar:~$ rm # can be used within the "example" directory
+[info] Hop removed for shortcut: example.
 
-hp rm # can be used within the "example" directory
-
->>> [info] Hop removed for shortcut: example.
-
-hp remove example # long form of rm command
-
->>> [info] Hop removed for shortcut: example.
+foo@bar:~$ remove example # long form of rm command
+[info] Hop removed for shortcut: example.
 ```
 to jump to the `example` named directory:
-```bash
-hp example
+```console
+foo@bar:~$ example
 ```
 to jump to the `example` named directory and open your default editor in that directory:
-```bash
-hp edit example
+```console
+foo@bar:~$ edit example
 ```
 to list all saved shortcuts:
-```bash
-hp ls # shortened form
+```console
+foo@bar:~$ ls # shortened form
+appdata  -> C:\Users\steph\AppData\Local
+back     -> C:\Users\steph\Projects\hop
+hop      -> C:\Users\steph\Projects\hop
+hpconf   -> C:\Users\steph\.config\bunnyhop
 
->>> appdata  -> C:\Users\steph\AppData\Local
->>> back     -> C:\Users\steph\Projects\hop
->>> hop      -> C:\Users\steph\Projects\hop
->>> hpconf   -> C:\Users\steph\.config\bunnyhop
-
-hp list # long form
-
->>> appdata  -> C:\Users\steph\AppData\Local
->>> back     -> C:\Users\steph\Projects\hop
->>> hop      -> C:\Users\steph\Projects\hop
->>> hpconf   -> C:\Users\steph\.config\bunnyhop
+foo@bar:~$ list # long form
+appdata  -> C:\Users\steph\AppData\Local
+back     -> C:\Users\steph\Projects\hop
+hop      -> C:\Users\steph\Projects\hop
+hpconf   -> C:\Users\steph\.config\bunnyhop
 ```
 to capture just the full path of a shortcut, you can again use the `locate` command:
-```bash
-hp locate init.vim # show full path to saved file `init.vim`
+```console
+foo@bar:~$ locate init.vim # show full path to saved file `init.vim`
+C:\Users\you\AppData\Local\nvim\init.vim
 
->>> C:\Users\you\AppData\Local\nvim\init.vim
-
-hp locate example # show full path to saved directory `example`
-
->>> C:\Users\you\Documents\example
+foo@bar:~$ locate example # show full path to saved directory `example`
+C:\Users\you\Documents\example
 ```
 ### custom configuration
 by default, you can find the configuration file for `bunnyhop` at `~/.config/bunnyhop/bunnyhop.toml`.
