@@ -9,8 +9,6 @@ __bunnyhop__() {
             sh -c "$last_cmd"
         else
             export dir=$(echo ${out#*" "})
-            echo "2nd"
-            echo $dir
             cd $dir
         fi
     elif [[ "$out" == "__cmd__"* ]]; then
