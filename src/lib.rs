@@ -366,6 +366,10 @@ impl Hopper {
             "back".italic().dimmed(),
             "rm".cyan().bold(),
             "remove".cyan().bold(),
+            "configure".cyan().bold(),
+            "edit".cyan().bold(),
+            "config".cyan().bold(),
+            "locate".cyan().bold(),
             "arg2".italic().dimmed(),
             "_".cyan().bold(),
             "hp".bold()
