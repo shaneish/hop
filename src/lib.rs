@@ -185,7 +185,12 @@ impl Hopper {
         }
     }
 
-    fn find_hop(&self, shortcut_name: String) -> anyhow::Result<()> {
+    fn print_hop(&self, shortcut_name: String) -> anyhow::Result<()> {
+        println!("{}", self.find_hop(shortcut_name)?);
+        Ok(())
+    }
+
+    fn find_hop(&self, shortcut_name: String) -> anyhow::Result<String> {
         let query = format!(
             "SELECT location FROM named_hops WHERE name=\"{}\"",
             &shortcut_name
@@ -193,9 +198,9 @@ impl Hopper {
         let mut statement = self.db.prepare(&query)?;
         while let Ok(sqlite::State::Row) = statement.next() {
             let location = statement.read::<String, _>("location")?;
-            println!("{}", location);
+            return Ok(location)
         }
-        Ok(())
+        Err(anyhow::format_err!("Cannot locate file or directory with the given shortcut name."))
     }
 
     fn use_hop(&mut self, shortcut_name: String) -> anyhow::Result<()> {
@@ -387,10 +392,35 @@ impl Hopper {
     }
 
     fn hop_to_and_open_dir(&mut self, shortcut_name: String) -> anyhow::Result<()> {
-        self.use_hop(shortcut_name)?;
-        println!("__cmd__ {}", self.config.settings.default_editor);
+        let hop_loc_string = self.find_hop(shortcut_name.clone());
+        match hop_loc_string {
+            Ok(loc) => {
+                let hop_loc = PathBuf::from(&loc);
+                if hop_loc.is_dir() {
+                    self.use_hop(shortcut_name)?;
+                    println!("__cmd__ {}", self.config.settings.default_editor);
+                } else if hop_loc.is_file() {
+                    println!("__cmd__ {} {}", self.map_editor(&hop_loc), hop_loc.as_path().display().to_string());
+                }
+            },
+            Err(_) => {
+                match self.check_dir(&shortcut_name) {
+                    Some((dir, short)) => {
+                        self.log_history(&dir, short)?;
+                        if dir.is_file() {
+                            let editor = self.map_editor(&dir);
+                            println!("__cmd__ {} {}", editor, dir.as_path().display().to_string());
+                        };
+                    },
+                    None => {
+                        println!("[error] Unable to find referenced file or directory.");
+                    }
+                };
+            },
+        };
         Ok(())
     }
+
     fn show_locations(&self) -> anyhow::Result<()> {
         println!("{}    {} {}", "Config Directory".magenta().bold(), "->".bold(), &self.env.config_file.parent().expect("[error] Unable to locate current config directory.").display().to_string().yellow().bold());
         println!("{}  {} {}", "Database Directory".magenta().bold(), "->".bold(), &self.env.database_file.parent().expect("[error] Unable to locate current database directory.").display().to_string().yellow().bold());
@@ -409,7 +439,7 @@ impl Hopper {
             Cmd::Remove(bunny) => self.remove_hop(bunny),
             Cmd::Configure => self.configure(),
             Cmd::LocateBunnyhop => self.show_locations(),
-            Cmd::LocateShortcut(name) => self.find_hop(name),
+            Cmd::LocateShortcut(name) => self.print_hop(name),
             Cmd::HopDirAndEdit(name) => self.hop_to_and_open_dir(name),
             Cmd::EditDir(bunny) => self.edit_dir(bunny),
             Cmd::PrintMsg(msg) => {
