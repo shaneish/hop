@@ -4,15 +4,15 @@ use args::{Cmd, Rabbit};
 use chrono::Local;
 use colored::Colorize;
 use dirs::home_dir;
-use serde_derive::Deserialize;
 use proceed::any_or_quit_with;
+use serde_derive::Deserialize;
 use sqlite;
 use std::{
-    include_str,
     collections::HashMap,
-    env::{current_dir, var, current_exe, consts},
+    env::{consts, current_dir, current_exe, var},
     fs,
     fs::read_dir,
+    include_str,
     io::Write,
     path::{Path, PathBuf},
 };
@@ -198,9 +198,11 @@ impl Hopper {
         let mut statement = self.db.prepare(&query)?;
         while let Ok(sqlite::State::Row) = statement.next() {
             let location = statement.read::<String, _>("location")?;
-            return Ok(location)
+            return Ok(location);
         }
-        Err(anyhow::format_err!("Cannot locate file or directory with the given shortcut name."))
+        Err(anyhow::format_err!(
+            "Cannot locate file or directory with the given shortcut name."
+        ))
     }
 
     fn use_hop(&mut self, shortcut_name: String) -> anyhow::Result<()> {
@@ -214,10 +216,7 @@ impl Hopper {
             let location_path = PathBuf::from(&location);
             if location_path.is_file() {
                 let editor = self.map_editor(&location_path);
-                println!(
-                    "__cmd__ {} {}",
-                    editor, location
-                );
+                println!("__cmd__ {} {}", editor, location);
             } else {
                 println!("__cd__ {}", location);
             }
@@ -244,8 +243,10 @@ impl Hopper {
 
     fn edit_dir(&mut self, bunny: Rabbit) -> anyhow::Result<()> {
         match bunny {
-            Rabbit::Dir(hop_name, hop_path) => { self.log_history(hop_path, hop_name)?; },
-            _ => {  },
+            Rabbit::Dir(hop_name, hop_path) => {
+                self.log_history(hop_path, hop_name)?;
+            }
+            _ => {}
         };
         println!("__cmd__ {}", self.config.settings.default_editor);
         Ok(())
@@ -270,12 +271,17 @@ impl Hopper {
                 location
             );
             self.db.execute(&query)?;
-            let mut count_result = self.db.prepare("SELECT COUNT(*) AS hist_count, MIN(time) AS hist_min FROM history")?;
+            let mut count_result = self
+                .db
+                .prepare("SELECT COUNT(*) AS hist_count, MIN(time) AS hist_min FROM history")?;
             if let Ok(sqlite::State::Row) = count_result.next() {
                 let history_count = count_result.read::<i64, _>("hist_count")?;
                 let history_min = count_result.read::<String, _>("hist_min")?;
                 if history_count > self.config.settings.max_history as i64 {
-                    self.db.execute(&format!("DELETE FROM history WHERE time=\"{}\"", history_min))?;
+                    self.db.execute(&format!(
+                        "DELETE FROM history WHERE time=\"{}\"",
+                        history_min
+                    ))?;
                 };
             };
         };
@@ -390,9 +396,12 @@ impl Hopper {
 
     fn configure(&self) -> anyhow::Result<()> {
         let editor = self.map_editor(&self.env.config_file);
-        println!("__cmd__ {} {}", editor, &self.env.config_file.display().to_string());
+        println!(
+            "__cmd__ {} {}",
+            editor,
+            &self.env.config_file.display().to_string()
+        );
         Ok(())
-
     }
 
     fn hop_to_and_open_dir(&mut self, shortcut_name: String) -> anyhow::Result<()> {
@@ -404,9 +413,13 @@ impl Hopper {
                     self.use_hop(shortcut_name)?;
                     println!("__cmd__ {}", self.config.settings.default_editor);
                 } else if hop_loc.is_file() {
-                    println!("__cmd__ {} {}", self.map_editor(&hop_loc), hop_loc.as_path().display().to_string());
+                    println!(
+                        "__cmd__ {} {}",
+                        self.map_editor(&hop_loc),
+                        hop_loc.as_path().display().to_string()
+                    );
                 }
-            },
+            }
             Err(_) => {
                 match self.check_dir(&shortcut_name) {
                     Some((dir, short)) => {
@@ -415,20 +428,56 @@ impl Hopper {
                             let editor = self.map_editor(&dir);
                             println!("__cmd__ {} {}", editor, dir.as_path().display().to_string());
                         };
-                    },
+                    }
                     None => {
                         println!("[error] Unable to find referenced file or directory.");
                     }
                 };
-            },
+            }
         };
         Ok(())
     }
 
     fn show_locations(&self) -> anyhow::Result<()> {
-        println!("{}    {} {}", "Config Directory".magenta().bold(), "->".bold(), &self.env.config_file.parent().expect("[error] Unable to locate current config directory.").display().to_string().yellow().bold());
-        println!("{}  {} {}", "Database Directory".magenta().bold(), "->".bold(), &self.env.database_file.parent().expect("[error] Unable to locate current database directory.").display().to_string().yellow().bold());
-        println!("{} {} {}", "Bunnyhop Executable".magenta().bold(), "->".bold(), current_exe().expect("[error] Unable to locate current bunnyhop executable.").display().to_string().yellow().bold());
+        println!(
+            "{}    {} {}",
+            "Config Directory".magenta().bold(),
+            "->".bold(),
+            &self
+                .env
+                .config_file
+                .parent()
+                .expect("[error] Unable to locate current config directory.")
+                .display()
+                .to_string()
+                .yellow()
+                .bold()
+        );
+        println!(
+            "{}  {} {}",
+            "Database Directory".magenta().bold(),
+            "->".bold(),
+            &self
+                .env
+                .database_file
+                .parent()
+                .expect("[error] Unable to locate current database directory.")
+                .display()
+                .to_string()
+                .yellow()
+                .bold()
+        );
+        println!(
+            "{} {} {}",
+            "Bunnyhop Executable".magenta().bold(),
+            "->".bold(),
+            current_exe()
+                .expect("[error] Unable to locate current bunnyhop executable.")
+                .display()
+                .to_string()
+                .yellow()
+                .bold()
+        );
         Ok(())
     }
 

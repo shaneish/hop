@@ -6,7 +6,7 @@ __bunnyhop__() {
             cd_dir=$(echo ${cd_cmd#*" "})
             cd "$cd_dir"
             last_cmd=$(echo ${out##*"__cmd__ "})
-            $last_cmd
+            sh -c "$last_cmd"
         else
             export dir=$(echo ${out#*" "})
             echo "2nd"
