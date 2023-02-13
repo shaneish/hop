@@ -50,6 +50,7 @@ pub enum Cmd {
     Configure,
     HopDirAndEdit(String),
     EditDir(Rabbit),
+    ShowHistory,
 }
 
 impl Cmd {
@@ -101,6 +102,8 @@ impl Cmd {
                     None => Cmd::Passthrough("_locate_bunnyhop".to_string()),
                 },
                 "_locate_bunnyhop" => Cmd::LocateBunnyhop,
+                "history" => Cmd::Passthrough("_history".to_string()),
+                "_history" => Cmd::ShowHistory,
                 whatevs => Cmd::Use(Rabbit::RequestName(whatevs.to_string())),
             },
             None => Cmd::PrintMsg("[error] Unable to parse current arguments.".to_string()),

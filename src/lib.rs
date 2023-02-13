@@ -205,6 +205,17 @@ impl Hopper {
         ))
     }
 
+    fn output_ambiguous<T: AsRef<Path>>(&self, location: T) {
+        let location_path = location.as_ref();
+        let location_string = location.as_ref().display().to_string();
+        if location_path.is_file() {
+            let editor = self.map_editor(&location);
+            println!("__cmd__ {} {}", editor, location_string);
+        } else if location_path.is_dir() {
+            println!("__cd__ {}", location_string);
+        };
+    }
+
     fn use_hop(&mut self, shortcut_name: String) -> anyhow::Result<()> {
         let query = format!(
             "SELECT location FROM named_hops WHERE name=\"{}\"",
@@ -214,29 +225,26 @@ impl Hopper {
         while let Ok(sqlite::State::Row) = statement.next() {
             let location = statement.read::<String, _>("location")?;
             let location_path = PathBuf::from(&location);
-            if location_path.is_file() {
-                let editor = self.map_editor(&location_path);
-                println!("__cmd__ {} {}", editor, location);
-            } else {
-                println!("__cd__ {}", location);
-            }
+            self.output_ambiguous(location_path);
             return Ok(());
         }
 
         match self.check_dir(&shortcut_name) {
             Some((dir, short)) => {
                 self.log_history(&dir, short)?;
-                if dir.is_file() {
-                    let editor = self.map_editor(&dir);
-                    println!("__cmd__ {} {}", editor, dir.as_path().display().to_string());
-                } else {
-                    println!("__cd__ {}", dir.as_path().display().to_string());
-                };
+                self.output_ambiguous(dir);
                 Ok(())
             }
             None => {
-                println!("[error] Unable to find referenced file or directory.");
-                Ok(())
+                let history = self.retrieve_history()?;
+                match history.iter().find(|(n, _)| n == &shortcut_name) {
+                    Some((short, dir)) => {
+                        self.log_history(&dir, short.to_string())?;
+                        self.output_ambiguous(dir);
+                        Ok(())
+                    }
+                    None => Err(anyhow::anyhow!("Unable to find referenced shortcut.")),
+                }
             }
         }
     }
@@ -306,15 +314,7 @@ impl Hopper {
             .find(|(_, path_end)| path_end == name)
     }
 
-    fn list_hops(&self) -> anyhow::Result<()> {
-        let query = format!("SELECT name, location FROM named_hops");
-        let mut query_result = self.db.prepare(&query)?;
-        let mut hops: Vec<(String, String)> = Vec::new();
-        while let Ok(sqlite::State::Row) = query_result.next() {
-            let name = query_result.read::<String, _>("name")?;
-            let location = query_result.read::<String, _>("location")?;
-            hops.push((name, location));
-        }
+    fn format_lists(&self, hops: Vec<(String, String)>) {
         let max_name_size = hops.iter().map(|(name, _)| name.len()).max().unwrap_or(0);
         let mut formatted_hops: Vec<String> = hops
             .into_iter()
@@ -344,10 +344,22 @@ impl Hopper {
             {
                 println!("{}", "Press 'Enter' to continue or 'q' to quit...".dimmed());
                 if !any_or_quit_with('q') {
-                    return Ok(());
+                    return;
                 }
             }
         }
+    }
+
+    fn list_hops(&self) -> anyhow::Result<()> {
+        let query = format!("SELECT name, location FROM named_hops");
+        let mut query_result = self.db.prepare(&query)?;
+        let mut hops: Vec<(String, String)> = Vec::new();
+        while let Ok(sqlite::State::Row) = query_result.next() {
+            let name = query_result.read::<String, _>("name")?;
+            let location = query_result.read::<String, _>("location")?;
+            hops.push((name, location));
+        }
+        self.format_lists(hops);
         Ok(())
     }
 
@@ -377,6 +389,7 @@ impl Hopper {
             "configure".cyan().bold(),
             "config".cyan().bold(),
             "locate".cyan().bold(),
+            "history".cyan().bold(),
             "...".cyan().bold(),
             "hp".bold()
         );
@@ -439,46 +452,53 @@ impl Hopper {
         Ok(())
     }
 
+    fn show_history(&self) -> anyhow::Result<()> {
+        let hops = self.retrieve_history()?;
+        self.format_lists(hops);
+        Ok(())
+    }
+
+    fn retrieve_history(&self) -> anyhow::Result<Vec<(String, String)>> {
+        let query = format!("SELECT name, t.location from (SELECT name, location, COUNT(location) AS cnt FROM history GROUP BY location)t INNER JOIN (SELECT location, MAX(name) FROM history GROUP BY location) v ON t.location = v.location");
+        let mut query_result = self.db.prepare(&query)?;
+        let mut hops: Vec<(String, String)> = Vec::new();
+        while let Ok(sqlite::State::Row) = query_result.next() {
+            let name = query_result.read::<String, _>("name")?;
+            let location = query_result.read::<String, _>("location")?;
+            hops.push((name, location));
+        }
+        Ok(hops)
+    }
+
     fn show_locations(&self) -> anyhow::Result<()> {
-        println!(
-            "{}    {} {}",
-            "Config Directory".cyan().bold(),
-            "->".bold(),
-            &self
-                .env
-                .config_file
-                .parent()
-                .expect("[error] Unable to locate current config directory.")
-                .display()
-                .to_string()
-                .green()
-                .bold()
-        );
-        println!(
-            "{}  {} {}",
-            "Database Directory".cyan().bold(),
-            "->".bold(),
-            &self
-                .env
-                .database_file
-                .parent()
-                .expect("[error] Unable to locate current database directory.")
-                .display()
-                .to_string()
-                .green()
-                .bold()
-        );
-        println!(
-            "{} {} {}",
-            "Bunnyhop Executable".cyan().bold(),
-            "->".bold(),
-            current_exe()
-                .expect("[error] Unable to locate current bunnyhop executable.")
-                .display()
-                .to_string()
-                .green()
-                .bold()
-        );
+        let loc_vec = vec![
+            (
+                "Config Directory".to_string(),
+                self.env
+                    .config_file
+                    .parent()
+                    .expect("[error] Unable to locate current config directory.")
+                    .display()
+                    .to_string(),
+            ),
+            (
+                "Database Directory".to_string(),
+                self.env
+                    .database_file
+                    .parent()
+                    .expect("[error] Unable to locate current database directory.")
+                    .display()
+                    .to_string(),
+            ),
+            (
+                "Bunnyhop Executable".to_string(),
+                current_exe()
+                    .expect("[error] Unable to locate current executable file.")
+                    .display()
+                    .to_string(),
+            ),
+        ];
+        self.format_lists(loc_vec);
         Ok(())
     }
 
@@ -496,6 +516,7 @@ impl Hopper {
             Cmd::LocateShortcut(name) => self.print_hop(name),
             Cmd::HopDirAndEdit(name) => self.hop_to_and_open_dir(name),
             Cmd::EditDir(bunny) => self.edit_dir(bunny),
+            Cmd::ShowHistory => self.show_history(),
             Cmd::PrintMsg(msg) => {
                 println!("{}", msg);
                 Ok(())
