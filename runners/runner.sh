@@ -15,7 +15,7 @@ __bunnyhop__() {
         fi
     elif [[ "$out" == "__cmd__"* ]]; then
         export edit_cmd=$(echo ${out#*" "})
-        $edit_cmd
+        sh -c "$edit_cmd"
     else
         echo "$out"
     fi
