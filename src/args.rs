@@ -48,6 +48,8 @@ pub enum Cmd {
     LocateBunnyhop,
     LocateShortcut(String),
     Configure,
+    HopDirAndEdit(String),
+    EditDir(Rabbit),
 }
 
 impl Cmd {
@@ -85,13 +87,15 @@ impl Cmd {
                     "v.".bold(),
                     env!("CARGO_PKG_VERSION").bright_white().bold()
                 )),
-                "brb" => {
-                    Cmd::SetBrb(env::current_dir().expect("[error] Unable to add brb location."))
-                }
+                "brb" => Cmd::SetBrb(current_dir),
                 "back" => Cmd::BrbHop,
                 "help" => Cmd::Passthrough("_help".to_string()),
                 "_help" => Cmd::PrintHelp,
                 "config" | "configure" => Cmd::Configure,
+                "edit" => match env::args().nth(2) {
+                    Some(name) => Cmd::HopDirAndEdit(name),
+                    None => Cmd::EditDir(Rabbit::from(current_dir, None)),
+                }
                 "locate" => match env::args().nth(2) {
                     Some(name) => Cmd::LocateShortcut(name),
                     None => Cmd::Passthrough("_locate_bunnyhop".to_string()),

@@ -119,7 +119,7 @@ impl Hopper {
         conn.execute(
             "CREATE TABLE IF NOT EXISTS history (
             time TEXT,
-            name TEXT NOT NULL unique,
+            name TEXT NOT NULL,
             location TEXT NOT NULL
             )",
         )?;
@@ -221,7 +221,7 @@ impl Hopper {
 
         match self.check_dir(&shortcut_name) {
             Some((dir, short)) => {
-                self.log_history(dir.as_path().display().to_string(), short)?;
+                self.log_history(&dir, short)?;
                 if dir.is_file() {
                     let editor = self.map_editor(&dir);
                     println!("__cmd__ {} {}", editor, dir.as_path().display().to_string());
@@ -237,6 +237,15 @@ impl Hopper {
         }
     }
 
+    fn edit_dir(&mut self, bunny: Rabbit) -> anyhow::Result<()> {
+        match bunny {
+            Rabbit::Dir(hop_name, hop_path) => { self.log_history(hop_path, hop_name)?; },
+            _ => {  },
+        };
+        println!("__cmd__ {}", self.config.settings.default_editor);
+        Ok(())
+    }
+
     fn just_do_it(&mut self, bunny: Rabbit) -> anyhow::Result<()> {
         match bunny {
             Rabbit::File(hop_name, hop_path) => self.add_hop(hop_path, &hop_name),
@@ -246,7 +255,8 @@ impl Hopper {
         }
     }
 
-    fn log_history(&self, location: String, name: String) -> anyhow::Result<()> {
+    fn log_history<T: AsRef<Path>>(&self, loc: T, name: String) -> anyhow::Result<()> {
+        let location = loc.as_ref().display().to_string();
         if self.config.settings.max_history > 0 {
             let query = format!(
                 "INSERT INTO history (time, name, location) VALUES ({}, \"{}\", \"{}\") ",
@@ -376,6 +386,11 @@ impl Hopper {
 
     }
 
+    fn hop_to_and_open_dir(&mut self, shortcut_name: String) -> anyhow::Result<()> {
+        self.use_hop(shortcut_name)?;
+        println!("__cmd__ {}", self.config.settings.default_editor);
+        Ok(())
+    }
     fn show_locations(&self) -> anyhow::Result<()> {
         println!("{}    {} {}", "Config Directory".magenta().bold(), "->".bold(), &self.env.config_file.parent().expect("[error] Unable to locate current config directory.").display().to_string().yellow().bold());
         println!("{}  {} {}", "Database Directory".magenta().bold(), "->".bold(), &self.env.database_file.parent().expect("[error] Unable to locate current database directory.").display().to_string().yellow().bold());
@@ -395,6 +410,8 @@ impl Hopper {
             Cmd::Configure => self.configure(),
             Cmd::LocateBunnyhop => self.show_locations(),
             Cmd::LocateShortcut(name) => self.find_hop(name),
+            Cmd::HopDirAndEdit(name) => self.hop_to_and_open_dir(name),
+            Cmd::EditDir(bunny) => self.edit_dir(bunny),
             Cmd::PrintMsg(msg) => {
                 println!("{}", msg);
                 Ok(())
