@@ -167,9 +167,7 @@ hp locate init.vim # show full path to saved file `init.vim`
 
 hp locate example # show full path to saved directory `example`
 
->>> Config Directory    -> C:\Users\you\.config\bunnyhop
->>> Database Directory  -> C:\Users\you\.config\bunnyhop\db
->>> Bunnyhop Executable -> C:\Users\you\Projects\hop\target\release\bunnyhop.exe
+>>> C:\Users\you\Documents\example
 ```
 ### custom configuration
 by default, you can find the configuration file for `bunnyhop` at `~/.config/bunnyhop/bunnyhop.toml`.

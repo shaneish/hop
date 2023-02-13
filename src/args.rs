@@ -95,7 +95,7 @@ impl Cmd {
                 "edit" => match env::args().nth(2) {
                     Some(name) => Cmd::HopDirAndEdit(name),
                     None => Cmd::EditDir(Rabbit::from(current_dir, None)),
-                }
+                },
                 "locate" => match env::args().nth(2) {
                     Some(name) => Cmd::LocateShortcut(name),
                     None => Cmd::Passthrough("_locate_bunnyhop".to_string()),
