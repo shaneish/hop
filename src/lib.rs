@@ -360,8 +360,8 @@ impl Hopper {
         println!(
             include!("defaults/help.txt"),
             "hp".bold(),
-            "arg1".italic().dimmed(),
-            "arg2".italic().dimmed(),
+            "arg1".bright_red(),
+            "arg2".bright_red(),
             "add".cyan().bold(),
             "ls".cyan().bold(),
             "list".cyan().bold(),
@@ -369,15 +369,15 @@ impl Hopper {
             "version".cyan().bold(),
             "brb".cyan().bold(),
             "hp".bold(),
-            "back".italic().dimmed(),
+            "back".bright_red(),
             "rm".cyan().bold(),
             "remove".cyan().bold(),
-            "configure".cyan().bold(),
+            "arg2".bright_red(),
             "edit".cyan().bold(),
+            "configure".cyan().bold(),
             "config".cyan().bold(),
             "locate".cyan().bold(),
-            "arg2".italic().dimmed(),
-            "_".cyan().bold(),
+            "...".cyan().bold(),
             "hp".bold()
         );
         Ok(())
@@ -389,7 +389,8 @@ impl Hopper {
             .into_os_string()
             .to_str()
             .expect("[error] Unable to convert current bunnyhop executable path to UTF-8.")
-            .to_string();
+            .to_string()
+            .replace("\\", "/");
         println!("__cmd__ {} {}", bunnyhop_exe, cmd);
         Ok(())
     }
@@ -441,7 +442,7 @@ impl Hopper {
     fn show_locations(&self) -> anyhow::Result<()> {
         println!(
             "{}    {} {}",
-            "Config Directory".magenta().bold(),
+            "Config Directory".cyan().bold(),
             "->".bold(),
             &self
                 .env
@@ -450,12 +451,12 @@ impl Hopper {
                 .expect("[error] Unable to locate current config directory.")
                 .display()
                 .to_string()
-                .yellow()
+                .green()
                 .bold()
         );
         println!(
             "{}  {} {}",
-            "Database Directory".magenta().bold(),
+            "Database Directory".cyan().bold(),
             "->".bold(),
             &self
                 .env
@@ -464,18 +465,18 @@ impl Hopper {
                 .expect("[error] Unable to locate current database directory.")
                 .display()
                 .to_string()
-                .yellow()
+                .green()
                 .bold()
         );
         println!(
             "{} {} {}",
-            "Bunnyhop Executable".magenta().bold(),
+            "Bunnyhop Executable".cyan().bold(),
             "->".bold(),
             current_exe()
                 .expect("[error] Unable to locate current bunnyhop executable.")
                 .display()
                 .to_string()
-                .yellow()
+                .green()
                 .bold()
         );
         Ok(())

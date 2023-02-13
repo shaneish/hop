@@ -58,27 +58,29 @@ Bunnyhop Executable -> C:\Users\steph\Projects\hop\target\release\bunnyhop.exe
 for general usage help:
 ```console
 foo@bar:~$ help # show basic commands
+
 hp arg1 arg2
     1) First argument is required.
     2) Second argument is optional.
 
-        If a second argument is given, that argument is the name that will
+Valid first argument commands are:
         be used to refer to the shortcut for future use.
         If no second argument is given, the high level name will be used.
     2) ls or list: command to list the current shortcuts and their names.
     3) v or version: both commands to show current hop version info.
     4) brb: command to create a temporary shortcut to the current directory
-        that can be jumped back to using the foo@bar:~$ back command.
-    5) rm or remove: command to remove the shortcut specified by configure.
+        that can be jumped back to using the hp back command.
+    5) rm or remove: command to remove the shortcut specified by arg2 or remove
+        shortcut to current directory if no second argument specified.
     6) edit: open a file or directory within your editor of choice.
-    7) config or locate: open your bunnyhop configuration file.
-    8) arg2: show all relevant installation directories if no second argument
+    7) configure or config: open your bunnyhop configuration file.
+    8) locate: show all relevant installation directories if no second argument
         is given.  If second argument is given, list the full path to the given
         argument.
-    10) _: Any other first arguments given will be checked to see if it
+    9) ...: Any other first arguments given will be checked to see if it
         represents a valid directory/file to hop to.  This input can be a named
         shortcut, a file/directory in the current directory, or a file/directory
-        from previous foo@bar:~$ commands.
+        from previous hp commands.
 
 foo@bar:~$ version # show version
 bunnyhop 🐇 v.0.2.4
