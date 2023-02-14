@@ -1,6 +1,6 @@
 pub mod args;
 use anyhow;
-use args::{Cmd, Rabbit};
+use args::Rabbit;
 use chrono::Local;
 use colored::Colorize;
 use dirs::home_dir;
@@ -397,14 +397,14 @@ impl Hopper {
     }
 
     fn runner(&self, cmd: String) -> anyhow::Result<()> {
-        let bunnyhop_exe = current_exe()
+        let bhop_exe = current_exe()
             .expect("[error] Unable to extract current bunnyhop executable name.")
             .into_os_string()
             .to_str()
             .expect("[error] Unable to convert current bunnyhop executable path to UTF-8.")
             .to_string()
             .replace("\\", "/");
-        println!("__cmd__ {} {}", bunnyhop_exe, cmd);
+        println!("__cmd__ {} {}", bhop_exe, cmd);
         Ok(())
     }
 
@@ -478,6 +478,42 @@ impl Hopper {
         Ok(hops)
     }
 
+    fn search_history(&self, bunny: Rabbit) -> anyhow::Result<()> {
+        let history = self.retrieve_history()?;
+        match bunny {
+            Rabbit::RequestName(name) => {
+                let associated_pair = history.into_iter().find(|(n, _)| n == &name);
+                match associated_pair {
+                    Some((_, associated_path)) => {
+                        println!("{}", associated_path);
+                        Ok(())
+                    }
+                    None => {
+                        println!(
+                            "[error] Unable to find matching reference in current history mapping."
+                        );
+                        Ok(())
+                    }
+                }
+            }
+            Rabbit::RequestPath(loc) => {
+                let associated_pair = history.into_iter().find(|(_, p)| loc == PathBuf::from(&p));
+                match associated_pair {
+                    Some((associated_name, _)) => {
+                        println!("{}", associated_name);
+                        Ok(())
+                    }
+                    None => self
+                        .search_history(Rabbit::RequestName(loc.as_path().display().to_string())),
+                }
+            }
+            _ => {
+                println!("[error] Unable to find matching reference in current history mapping.");
+                Ok(())
+            }
+        }
+    }
+
     fn show_locations(&self) -> anyhow::Result<()> {
         let loc_vec = vec![
             (
@@ -508,28 +544,6 @@ impl Hopper {
         ];
         self.format_lists(loc_vec);
         Ok(())
-    }
-
-    pub fn execute(&mut self, cmd: Cmd) -> anyhow::Result<()> {
-        match cmd {
-            Cmd::Passthrough(cmd) => self.runner(cmd),
-            Cmd::Use(bunny) => self.just_do_it(bunny),
-            Cmd::SetBrb(loc) => self.brb(loc),
-            Cmd::BrbHop => self.use_hop("back".to_string()),
-            Cmd::ListHops => self.list_hops(),
-            Cmd::PrintHelp => Self::print_help(),
-            Cmd::Remove(bunny) => self.remove_hop(bunny),
-            Cmd::Configure => self.configure(),
-            Cmd::LocateBunnyhop => self.show_locations(),
-            Cmd::LocateShortcut(name) => self.print_hop(name),
-            Cmd::HopDirAndEdit(name) => self.hop_to_and_open_dir(name),
-            Cmd::EditDir(bunny) => self.edit_dir(bunny),
-            Cmd::ShowHistory => self.show_history(),
-            Cmd::PrintMsg(msg) => {
-                println!("{}", msg);
-                Ok(())
-            }
-        }
     }
 }
 

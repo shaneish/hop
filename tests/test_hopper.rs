@@ -1,9 +1,9 @@
-use bunnyhop::{args::Rabbit, Hopper, Settings};
+use bhop::{Hopper, Settings};
 use serial_test::serial;
 use std::{collections::HashMap, env, fs, io::Write, path::PathBuf};
 use tempdir::TempDir;
 
-fn get_test_hopper(config_dir: &PathBuf) -> bunnyhop::Hopper {
+fn get_test_hopper(config_dir: &PathBuf) -> bhop::Hopper {
     env::set_var(
         "HOP_CONFIG_DIRECTORY",
         config_dir.as_path().display().to_string(),
@@ -50,7 +50,7 @@ fn test_read_default_configs() {
     let config_dir = PathBuf::from(&temp_dir.path());
     let hopper = get_test_hopper(&config_dir);
     println!("{:?}", hopper.config);
-    let default_config = bunnyhop::Config {
+    let default_config = bhop::Config {
         settings: Settings {
             default_editor: get_default_editor(),
             max_history: 300,
@@ -72,14 +72,19 @@ fn test_read_configs_with_alt_editors() {
     alt_toml.push("bunnyhop.toml");
     let mut alt_toml_file =
         fs::File::create(&alt_toml).expect("Unable to create alternate bunnyhop.toml.");
-    alt_toml_file.write_all(b"[settings]\ndefault_editor=\"vi\"\nmax_history=100\nls_display_block=10\n[editors]\npy=\"nano\"\nipynb=\"code\"\nrust=\"nvim\"").expect("Unable to generate alternate hop.toml.");
+    alt_toml_file
+        .write_all(
+            b"[settings]\ndefault_editor=\"vi\"\nmax_history=100\nls_display_block=10\n
+                            [editors]\npy=\"nano\"\nipynb=\"code\"\nrust=\"nvim\"",
+        )
+        .expect("Unable to generate alternate hop.toml.");
     let hopper = get_test_hopper(&config_dir);
     let expected_editors = HashMap::from_iter(
         [("py", "nano"), ("ipynb", "code"), ("rust", "nvim")]
             .iter()
             .map(|(a, b)| (a.to_string(), b.to_string())),
     );
-    let default_config = bunnyhop::Config {
+    let default_config = bhop::Config {
         settings: Settings {
             default_editor: "vi".to_string(),
             max_history: 100,

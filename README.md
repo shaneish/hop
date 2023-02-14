@@ -5,7 +5,7 @@ i have a bash/zsh/nushell function named `short` that lets users jump to predefi
 
 the basic zsh function that i originally used was defined as:
 
-```console
+```bash
 short() {
     if [[ "$1" == "add" ]]; then
         if [ ! -f  ~/.config/.shorts/${2} ]; then
@@ -29,11 +29,11 @@ simply clone this repo and run `make` from the root repo directory.
 current install script that works on the most systems with the most shells requires a system install of `python3` and `cargo`.
 
 if you currently don't have `rust` or `cargo` set up on your system, just run the following command before installing `bunnyhop`
-```console
+```bash
 curl https://sh.rustup.rs -sSf | sh
 ```
 once `cargo` is installed, simply run the following to install `bunnyhop`:
-```console
+```bash
 git clone https://github.com/gnoat/hop.github
 cd hop
 make all
@@ -42,13 +42,13 @@ the default runner alias set is `hp`, use this to call `bunnyhop` from the comma
 
 once everything is installed and the shell hooks added, you can open the config file to set your editor and other preferences by simply typing:
 ```console
-foo@bar:~$ configure
+foo@bar:~$ hp configure
 ```
 the current build supports four different shells: nushell, zsh, powershell, and bash/dash/anything else that use ~/.bashrc.
 
 to see where all your configuration resources were provisioned, use:
 ```console
-foo@bar:~$ locate
+foo@bar:~$ hp locate
 Config Directory    -> C:\Users\steph\.config\bunnyhop
 Database Directory  -> C:\Users\steph\.config\bunnyhop\db
 Bunnyhop Executable -> C:\Users\steph\Projects\hop\target\release\bunnyhop.exe
@@ -57,7 +57,7 @@ Bunnyhop Executable -> C:\Users\steph\Projects\hop\target\release\bunnyhop.exe
 ### how to use
 for general usage help:
 ```console
-foo@bar:~$ help # show basic commands
+foo@bar:~$ hp help # show basic commands
 
 hp arg1 arg2
     1) First argument is required.
@@ -87,7 +87,7 @@ bunnyhop 🐇 v.0.2.4
 ```
 to add a shortcut to your directory with the shortcut name `example`:
 ```console
-foo@bar:~$ add example
+foo@bar:~$ hp add example
 [info] Hop created for example.
 ```
 to add a shortcut to your current directory and use the current directory high level name as the shortcut name:
@@ -95,22 +95,22 @@ to add a shortcut to your current directory and use the current directory high l
 echo $PWD
 /usr/bin/cargo
 
-foo@bar:~$ add
+foo@bar:~$ hp add
 [info] Hop created for cargo.
 ```
 to add a shortcut to a file that can be opened up in the set editor, use:
 ```console
-foo@bar:~$ add init.vim # will create a shortcut to init.vim named `init.vim`
+foo@bar:~$ hp add init.vim # will create a shortcut to init.vim named `init.vim`
 [info] Hop created for init.vim.
 
-foo@bar:~$ add init.vim vi # will create a shortcut to init.vim named `vi`
+foo@bar:~$ hp add init.vim vi # will create a shortcut to init.vim named `vi`
 [info] Hop created for vi.
 ```
 to open a shortcut file in your configured editor of choice, use either of the following:
 ```console
-foo@bar:~$ edit init.vim # full command consistent with opening a directory for editing
+foo@bar:~$ hp edit init.vim # full command consistent with opening a directory for editing
 
-foo@bar:~$ init.vim # shortened command that just works for editing files and not directories
+foo@bar:~$ hp init.vim # shortened command that just works for editing files and not directories
 ```
 to delete a shortcut with name `example`:
 ```console
@@ -120,29 +120,29 @@ foo@bar:~$ rm example # can be used from any location
 echo $PWD
 C:\Users\you\Documents\example
 
-foo@bar:~$ rm # can be used within the "example" directory
+foo@bar:~$ hp rm # can be used within the "example" directory
 [info] Hop removed for shortcut: example.
 
-foo@bar:~$ remove example # long form of rm command
+foo@bar:~$ hp remove example # long form of rm command
 [info] Hop removed for shortcut: example.
 ```
 to jump to the `example` named directory:
 ```console
-foo@bar:~$ example
+foo@bar:~$ hp example
 ```
 to jump to the `example` named directory and open your default editor in that directory:
 ```console
-foo@bar:~$ edit example
+foo@bar:~$ hp edit example
 ```
 to list all saved shortcuts:
 ```console
-foo@bar:~$ ls # shortened form
+foo@bar:~$ hp ls # shortened form
 appdata  -> C:\Users\steph\AppData\Local
 back     -> C:\Users\steph\Projects\hop
 hop      -> C:\Users\steph\Projects\hop
 hpconf   -> C:\Users\steph\.config\bunnyhop
 
-foo@bar:~$ list # long form
+foo@bar:~$ hp list # long form
 appdata  -> C:\Users\steph\AppData\Local
 back     -> C:\Users\steph\Projects\hop
 hop      -> C:\Users\steph\Projects\hop
@@ -150,10 +150,10 @@ hpconf   -> C:\Users\steph\.config\bunnyhop
 ```
 to capture just the full path of a shortcut, you can again use the `locate` command:
 ```console
-foo@bar:~$ locate init.vim # show full path to saved file `init.vim`
+foo@bar:~$ hp locate init.vim # show full path to saved file `init.vim`
 C:\Users\you\AppData\Local\nvim\init.vim
 
-foo@bar:~$ locate example # show full path to saved directory `example`
+foo@bar:~$ hp locate example # show full path to saved directory `example`
 C:\Users\you\Documents\example
 ```
 ### custom configuration

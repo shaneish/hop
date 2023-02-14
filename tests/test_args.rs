@@ -1,4 +1,4 @@
-use bunnyhop::args::Rabbit;
+use bhop::args::Rabbit;
 use std::{env::current_dir, path::PathBuf};
 
 #[test]

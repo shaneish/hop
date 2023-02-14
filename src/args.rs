@@ -2,6 +2,7 @@
 // existing crate because I wanted `hp` commands to be more natural language-like and use dynamic
 // positional commands
 
+use crate::Hopper;
 use colored::Colorize;
 use std::{
     env,
@@ -34,6 +35,14 @@ impl Rabbit {
             Rabbit::File(current_name, input.as_ref().to_path_buf())
         }
     }
+
+    pub fn request(input: String) -> Self {
+        if PathBuf::from(&input).exists() {
+            Rabbit::RequestPath(PathBuf::from(&input))
+        } else {
+            Rabbit::RequestName(input)
+        }
+    }
 }
 
 pub enum Cmd {
@@ -51,6 +60,7 @@ pub enum Cmd {
     HopDirAndEdit(String),
     EditDir(Rabbit),
     ShowHistory,
+    PullHistory(Rabbit),
 }
 
 impl Cmd {
@@ -76,15 +86,15 @@ impl Cmd {
                     )),
                 },
                 "rm" | "remove" => match env::args().nth(2) {
-                    Some(name) => Cmd::Remove(Rabbit::RequestName(name)),
-                    None => Cmd::Remove(Rabbit::RequestPath(current_dir.to_path_buf())),
+                    Some(name) => Cmd::Remove(Rabbit::request(name)),
+                    None => Cmd::Remove(Rabbit::request(current_dir.display().to_string())),
                 },
                 "ls" | "list" => Cmd::Passthrough("_ls".to_string()),
                 "_ls" => Cmd::ListHops,
                 "version" | "v" => Cmd::Passthrough("_version".to_string()),
                 "_version" => Cmd::PrintMsg(format!(
                     "{} 🐇 {}{}",
-                    "bunnyhop".cyan().bold(),
+                    "BunnyHop".cyan().bold(),
                     "v.".bold(),
                     env!("CARGO_PKG_VERSION").bright_white().bold()
                 )),
@@ -99,14 +109,45 @@ impl Cmd {
                 },
                 "locate" => match env::args().nth(2) {
                     Some(name) => Cmd::LocateShortcut(name),
-                    None => Cmd::Passthrough("_locate_bunnyhop".to_string()),
+                    None => Cmd::Passthrough("_list_all_history_hops".to_string()),
                 },
-                "_locate_bunnyhop" => Cmd::LocateBunnyhop,
-                "history" => Cmd::Passthrough("_history".to_string()),
-                "_history" => Cmd::ShowHistory,
+                "_list_all_history_hops" => Cmd::LocateBunnyhop,
+                "history" => match env::args().nth(2) {
+                    Some(arg) => Cmd::Passthrough(format!("_history {}", arg)),
+                    None => Cmd::Passthrough("_history".to_string()),
+                },
+                "_history" => match env::args().nth(2) {
+                    Some(name) => Cmd::PullHistory(Rabbit::request(name)),
+                    None => Cmd::ShowHistory,
+                },
                 whatevs => Cmd::Use(Rabbit::RequestName(whatevs.to_string())),
             },
             None => Cmd::PrintMsg("[error] Unable to parse current arguments.".to_string()),
+        }
+    }
+}
+
+impl Hopper {
+    pub fn execute(&mut self, cmd: Cmd) -> anyhow::Result<()> {
+        match cmd {
+            Cmd::Passthrough(cmd) => self.runner(cmd),
+            Cmd::Use(bunny) => self.just_do_it(bunny),
+            Cmd::SetBrb(loc) => self.brb(loc),
+            Cmd::BrbHop => self.use_hop("back".to_string()),
+            Cmd::ListHops => self.list_hops(),
+            Cmd::PrintHelp => Self::print_help(),
+            Cmd::Remove(bunny) => self.remove_hop(bunny),
+            Cmd::Configure => self.configure(),
+            Cmd::LocateBunnyhop => self.show_locations(),
+            Cmd::LocateShortcut(name) => self.print_hop(name),
+            Cmd::HopDirAndEdit(name) => self.hop_to_and_open_dir(name),
+            Cmd::EditDir(bunny) => self.edit_dir(bunny),
+            Cmd::ShowHistory => self.show_history(),
+            Cmd::PullHistory(bunny) => self.search_history(bunny),
+            Cmd::PrintMsg(msg) => {
+                println!("{}", msg);
+                Ok(())
+            }
         }
     }
 }

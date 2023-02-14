@@ -1,10 +1,10 @@
-use bunnyhop;
+use bhop;
 
 fn main() {
-    let big_command = bunnyhop::args::Cmd::parse();
-    let big_hopper = bunnyhop::Hopper::new();
-    match big_hopper {
-        Ok(mut hopper) => match hopper.execute(big_command) {
+    let command = bhop::args::Cmd::parse();
+    let hopper = bhop::Hopper::new();
+    match hopper {
+        Ok(mut hopper) => match hopper.execute(command) {
             Ok(_) => {}
             Err(e) => println!("[error] Unable to execute hop command: {}", e),
         },

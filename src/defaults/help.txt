@@ -19,7 +19,11 @@ Valid first argument commands are:
     8) {}: show all relevant installation directories if no second argument
         is given.  If second argument is given, list the full path to the given
         argument.
-    9) {}: show all available shortcuts currently saved in history.
+    9) {}: show all available shortcuts currently saved in history.  If second argument
+        is given, finds associated value in history.  If second argument is a valid
+        path, shows the shortcut name for that path (if it exists).  If second
+        argument is a shortcut name, shows the most commonly used path for that
+        shortcut name (if it exists).
     10) {}: Any other first arguments given will be checked to see if it
         represents a valid directory/file to hop to.  This input can be a named
         shortcut, a file/directory in the current directory, or a file/directory
