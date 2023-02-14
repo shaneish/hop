@@ -95,7 +95,7 @@ bunnyhop 🐇 v.0.2.4
 To add a shortcut to your directory with the shortcut name `example`:
 ```console
 foo@bar:~$ hp add example
-[info] Hop created for example.
+[info] Added shortcut: example -> /home/you/parentdir/example
 ```
 To add a shortcut to your current directory and use the current directory high level name as the shortcut name:
 ```console
@@ -103,15 +103,15 @@ echo $PWD
 /usr/bin/cargo
 
 foo@bar:~$ hp add
-[info] Hop created for cargo.
+[info] Added shortcut: cargo -> /usr/bin/cargo
 ```
 To add a shortcut to a file that can be opened up in the set editor, use:
 ```console
 foo@bar:~$ hp add init.vim # will create a shortcut to init.vim named `init.vim`
-[info] Hop created for init.vim.
+[info] Added shortcut: init.vim -> /home/you/.config/nvim/init.vim
 
 foo@bar:~$ hp add init.vim vi # will create a shortcut to init.vim named `vi`
-[info] Hop created for vi.
+[info] Added shortcut: vi -> /home/you/.config/nvim/init.vim
 ```
 To open a shortcut file in your configured editor of choice, use either of the following:
 ```console
@@ -122,16 +122,16 @@ foo@bar:~$ hp init.vim # shortened command that just works for editing files and
 To delete a shortcut with name `example`:
 ```console
 foo@bar:~$ hp rm example # can be used from any location
-[info] Hop removed for shortcut: example.
+[info] Removed shortcut: example.
 
 echo $PWD
 C:\Users\you\Documents\example
 
 foo@bar:~$ hp rm # can be used within the "example" directory
-[info] Hop removed for shortcut: example.
+[info] Removed shortcut: example.
 
 foo@bar:~$ hp remove example # long form of rm command
-[info] Hop removed for shortcut: example.
+[info] Removed shortcut: example.
 ```
 To jump to the `example` named directory:
 ```console

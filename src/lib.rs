@@ -132,36 +132,45 @@ impl Hopper {
     }
 
     fn add_hop<T: AsRef<Path>>(&mut self, path: T, name: &str) -> anyhow::Result<()> {
+        let path_as_string = path.as_ref().display().to_string();
         let query = format!(
             "INSERT OR REPLACE INTO named_hops (name, location) VALUES (\"{}\", \"{}\")",
             name,
-            path.as_ref().display().to_string()
+            &path_as_string
         );
         self.db.execute(&query)?;
-        println!("[info] Hop created for {}.", name);
+        println!("[info] Added shortcut: {} -> {}", name, path_as_string);
         Ok(())
     }
 
-    fn remove_hop(&mut self, bunny: args::Rabbit) -> anyhow::Result<()> {
-        let output_pair = match bunny {
-            args::Rabbit::RequestName(name) => {
-                Some((format!("name=\"{}\"", name), format!("shortcut: {}", name)))
+    fn remove_hop(&mut self, rabbit: Rabbit) -> anyhow::Result<()> {
+        let mut is_passthrough = false;
+        let statement_check = match rabbit {
+            Rabbit::RequestName(name) => Some((self.db.execute(&format!("DELETE FROM named_hops WHERE name=\"{}\"", &name)), name)),
+            Rabbit::RequestPath(loc) => Some((self.db.execute(&format!("DELETE FROM named_hops WHERE location=\"{}\"", &loc.as_path().display().to_string())), loc.as_path().display().to_string())),
+            Rabbit::RequestAmbiguous(name, loc) => {
+                is_passthrough = true;
+                match self.find_hop(name.clone()) {
+                    Some(_) => {
+                        self.remove_hop(Rabbit::RequestName(name))?;
+                        None
+                    }
+                    None => {
+                        self.remove_hop(Rabbit::RequestPath(loc))?;
+                        None
+                    }
+                }
             }
-            args::Rabbit::RequestPath(loc) => Some((
-                format!("location=\"{}\"", loc.as_path().display().to_string()),
-                format!("location: {}", loc.as_path().display().to_string()),
-            )),
             _ => None,
         };
-        match output_pair {
-            Some((q, n)) => match self
-                .db
-                .execute(&format!("DELETE FROM named_hops WHERE {}", q))
-            {
-                Ok(_) => println!("[info] Hop removed for {}.", n),
-                Err(e) => println!("[error] Unable to remove {}, for error: {}", n, e),
-            },
-            None => println!("[error] Unable to determine hop to remove."),
+        if !is_passthrough {
+            match statement_check {
+                Some((statement, name)) => match statement {
+                    Ok(_) => println!("[info] Removed shortcut: {}", name),
+                    Err(e) => println!("[error] Failed to remove shortcut: {} with error {}", name, e),
+                },
+                None => println!("[error] Unable to find shortcut to remove.")
+            };
         };
         Ok(())
     }
@@ -186,23 +195,32 @@ impl Hopper {
     }
 
     fn print_hop(&self, shortcut_name: String) -> anyhow::Result<()> {
-        println!("{}", self.find_hop(shortcut_name)?);
+        match self.find_hop(shortcut_name) {
+            Some(name) => println!("{}", name),
+            None => println!("[error] Unable to find shortcut.")
+        }
         Ok(())
     }
 
-    fn find_hop(&self, shortcut_name: String) -> anyhow::Result<String> {
+    fn find_hop(&self, shortcut_name: String) -> Option<String> {
         let query = format!(
             "SELECT location FROM named_hops WHERE name=\"{}\"",
             &shortcut_name
         );
-        let mut statement = self.db.prepare(&query)?;
-        while let Ok(sqlite::State::Row) = statement.next() {
-            let location = statement.read::<String, _>("location")?;
-            return Ok(location);
+        let statement_result = self.db.prepare(&query);
+        match statement_result {
+            Ok(mut statement) => {
+                while let Ok(sqlite::State::Row) = statement.next() {
+                    let location_result = statement.read::<String, _>("location");
+                    match location_result {
+                        Ok(location) => return Some(location),
+                        Err(_) => return None
+                    }
+                }
+                None
+            },
+            Err(_) => return None,
         }
-        Err(anyhow::format_err!(
-            "Cannot locate file or directory with the given shortcut name."
-        ))
     }
 
     fn output_ambiguous<T: AsRef<Path>>(&self, location: T) {
@@ -265,7 +283,7 @@ impl Hopper {
             Rabbit::File(hop_name, hop_path) => self.add_hop(hop_path, &hop_name),
             Rabbit::Dir(hop_name, hop_path) => self.add_hop(hop_path, &hop_name),
             Rabbit::RequestName(shortcut_name) => self.use_hop(shortcut_name),
-            Rabbit::RequestPath(_) => Ok(()),
+            _ => Ok(()),
         }
     }
 
@@ -421,7 +439,7 @@ impl Hopper {
     fn hop_to_and_open_dir(&mut self, shortcut_name: String) -> anyhow::Result<()> {
         let hop_loc_string = self.find_hop(shortcut_name.clone());
         match hop_loc_string {
-            Ok(loc) => {
+            Some(loc) => {
                 let hop_loc = PathBuf::from(&loc);
                 if hop_loc.is_dir() {
                     self.use_hop(shortcut_name)?;
@@ -434,7 +452,7 @@ impl Hopper {
                     );
                 }
             }
-            Err(_) => {
+            None => {
                 match self.check_dir(&shortcut_name) {
                     Some((dir, short)) => {
                         self.log_history(&dir, short)?;
