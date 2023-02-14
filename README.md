@@ -212,3 +212,4 @@ Check out the config file to see the current options available and to set your p
 1) Write a more comprehensive suite of unit tests.
 2) Add functionality to search stored history for possible locations.
 3) Add customized editor launch commands (ie allow flags when calling an editor to open a file).
+4) Make a Neovim plugin so I can easily navigate without opening a new terminal panel or closing current terminal panel.
