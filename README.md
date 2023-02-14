@@ -187,7 +187,6 @@ foo@bar:~$ echo $PWD
 /home/you/projects/hop/src
 ```
 
-```
 ### custom configuration
 by default, you can find the configuration file for `bunnyhop` at `~/.config/bunnyhop/bunnyhop.toml`.
 
