@@ -42,6 +42,8 @@ cd hop
 make all
 ```
 The default runner alias set is `hp`, use this to call `bunnyhop` from the command line (unless you set a custom alias).
+If you'd like to use a different alias to call `bunnyhop` from your terminal, simple set the environment variable "**BUNNYHOP_SHELL_ALIAS**" prior to running the `make` command.
+If you'd like to change to a different alias after installion, again you can just set the environment variable "**BUNNYHOP_SHELL_ALIAS**" and rerun the appropriate `make` command.
 
 Once everything is installed and the shell hooks added, you can open the config file to set your editor and other preferences by simply typing:
 ```console
@@ -117,7 +119,7 @@ foo@bar:~$ hp init.vim # shortened command that just works for editing files and
 ```
 To delete a shortcut with name `example`:
 ```console
-foo@bar:~$ rm example # can be used from any location
+foo@bar:~$ hp rm example # can be used from any location
 [info] Hop removed for shortcut: example.
 
 echo $PWD
@@ -208,8 +210,27 @@ By default, you can find the configuration file for `bunnyhop` at `~/.config/bun
 
 Check out the config file to see the current options available and to set your personal editors (default is `vi` for Unix and `notepad` for Windows).
 
+Additionally, if you'd to use a location other than the default for your system to store the configuration files and SQLite database, you can set the following environment variables before running `bunnyhop`.
+1) `HOP_CONFIG_DIRECTORY` - Sets the directory the configuration files will be provisioned in. Defaults to `~/.config/bunnyhop`.
+2) `HOP_CONFIG_FILE_NAME` - Sets the actual filename of the configuration file within the config directory. Defaults to `bunnyhop.toml`.
+3) `HOP_DATABASE_DIRECTORY` - Sets the directory that the SQLite database directory is stored in. Defaults to `~/.config/bunnyhop/db`.
+4) `HOP_DATABASE_FILE_NAME` - Sets the actual filename of the SQLite database. Defaults to `bunnyhop.db`.
+
+Note: It checks these variables every time `bunnyhop` is called, so if you use a location other than the default you need to ensure the above variables are added to your PATH.
+
+2nd Note: If you change these environment variables after you've already run and set up `bunnyhop`, you need to copy the files over from their default location and rename them if you want to continue using the same defaults.  Otherwise, a new configuration file and a new database will be created.
+
+If you'd like to see what the current configuration and database directories, simple run `hp locate` from your command line.
+
+If your shell configuration file is set to a non-default location, you can set the following environment variables manually before building `bunnyhop` and it will configure the runners in the location you set:
+1) `BUNNYHOP_ZSH_CONFIG_DIR` - Directory your `.zshrc` file is located.
+2) `BUNNYHOP_BASH_CONFIG_DIR` - Directory your `.bashrc` file is located.
+3) `BUNNYHOP_NUSHELL_CONFIG_DIR` - Directory your nushell `env.nu` file is located.
+4) `BUNNYHOP_POWERSHELL_CONFIG_DIR` - Directory your powershell `profile.ps1` or `Microsoft.PowerShell_profile.ps1` files are located.
+
+Once these variables have been set, you must rerun the `make` command for the shell you're trying to update and it will add the runner function to the appropriate place.
 ### TODO
-1) Write a more comprehensive suite of unit tests.
-2) Add functionality to search stored history for possible locations.
-3) Add customized editor launch commands (ie allow flags when calling an editor to open a file).
-4) Make a Neovim plugin so I can easily navigate without opening a new terminal panel or closing current terminal panel.
+6) Write a more comprehensive suite of unit tests.
+7) Add functionality to search stored history for possible locations.
+8) Add customized editor launch commands (ie allow flags when calling an editor to open a file).
+9) Make a Neovim plugin so I can easily navigate without opening a new terminal panel or closing current terminal panel.
