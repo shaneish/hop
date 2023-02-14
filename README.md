@@ -42,7 +42,9 @@ cd hop
 make all
 ```
 The default runner alias set is `hp`, use this to call `bunnyhop` from the command line (unless you set a custom alias).
+
 If you'd like to use a different alias to call `bunnyhop` from your terminal, simple set the environment variable "**BUNNYHOP_SHELL_ALIAS**" prior to running the `make` command.
+
 If you'd like to change to a different alias after installion, again you can just set the environment variable "**BUNNYHOP_SHELL_ALIAS**" and rerun the appropriate `make` command.
 
 Once everything is installed and the shell hooks added, you can open the config file to set your editor and other preferences by simply typing:
@@ -230,7 +232,15 @@ If your shell configuration file is set to a non-default location, you can set t
 
 Once these variables have been set, you must rerun the `make` command for the shell you're trying to update and it will add the runner function to the appropriate place.
 ### TODO
-6) Write a more comprehensive suite of unit tests.
-7) Add functionality to search stored history for possible locations.
-8) Add customized editor launch commands (ie allow flags when calling an editor to open a file).
-9) Make a Neovim plugin so I can easily navigate without opening a new terminal panel or closing current terminal panel.
+1) Write a more comprehensive suite of unit tests.
+2) Add functionality to search stored history for possible locations.
+3) Add customized editor launch commands (ie allow flags when calling an editor to open a file).
+4) Make a Neovim plugin so I can easily navigate without opening a new terminal panel or closing current terminal panel.
+5) Create ability to add shortcuts for groups of files that can be opened together in the editor at the same time.
+
+## LICENSE
+MIT.
+
+If you have issues or would like some update/improvement, feel free to reach out and file an issue.
+
+(fin.)
