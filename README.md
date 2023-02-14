@@ -2,7 +2,7 @@
 
 ### WHAT EVEN IS THIS ??
 
-**Tl;dr: a tool to quickly work with a filesystem via saved shortcuts and historical movements. Allows user to both jump to other locations or open files in other locations in an editor of your choice.**
+**Tl;dr: a tool to quickly work with you filesystem via saved shortcuts and historical movements. Allows user to both jump to other locations or open files in other locations in an editor of your choice with a single command.**
 
 I have a bash/zsh/nushell function named `short` that lets users jump to predefined directories easily.
 
