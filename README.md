@@ -1,9 +1,12 @@
-# bunnyhop
+# BUNNYHOP
 
-### what even is this?
-i have a bash/zsh/nushell function named `short` that lets users jump to predefined directories easily.
+### WHAT EVEN IS THIS ??
 
-the basic zsh function that i originally used was defined as:
+**Tl;dr:** a tool to quickly work with a filesystem via saved shortcuts and historical movements. Allows user to both jump to other locations or open files in other locations in an editor of your choice.
+
+I have a bash/zsh/nushell function named `short` that lets users jump to predefined directories easily.
+
+The basic zsh function that I originally used was defined as:
 
 ```bash
 short() {
@@ -17,36 +20,36 @@ short() {
     fi
 }
 ```
-however, as this required maintaining separate scripts for the various shells i use (nushell for personal, bash and zsh for work), i've found it very annoying to have to update the same script multiple times every time i want to add a new feature.
+However, as this required maintaining separate scripts for the various shells I use (nushell for personal, bash and zsh for work), I've found it very annoying to have to update the same script multiple times every time I want to add a new feature.
 
 `bunnyhop` is supposed to replicate the behavior of `short`, but in a single language so it's easily updated between various shells.
 
-this iteration also includes many improvements over the very simple shell function used before (and doesn't clutter you're system with unnecessary symlinks).
+This iteration also includes many improvements over the very simple shell function used before (and doesn't clutter you're system with unnecessary symlinks).
 
-### how to install
-simply clone this repo and run `make` from the root repo directory.
+### HOW TO INSTALL
+Simply clone this repo and run `make` from the root repo directory.
 
-current install script that works on the most systems with the most shells requires a system install of `python3` and `cargo`.
+Current install script that works on the most systems with the most shells requires a system install of `python3` and `cargo`.
 
-if you currently don't have `rust` or `cargo` set up on your system, just run the following command before installing `bunnyhop`
+If you currently don't have `rust` or `cargo` set up on your system, just run the following command before installing `bunnyhop`
 ```bash
 curl https://sh.rustup.rs -sSf | sh
 ```
-once `cargo` is installed, simply run the following to install `bunnyhop`:
+Once `cargo` is installed, simply run the following to install `bunnyhop`:
 ```bash
 git clone https://github.com/gnoat/hop.github
 cd hop
 make all
 ```
-the default runner alias set is `hp`, use this to call `bunnyhop` from the command line (unless you set a custom alias).
+The default runner alias set is `hp`, use this to call `bunnyhop` from the command line (unless you set a custom alias).
 
-once everything is installed and the shell hooks added, you can open the config file to set your editor and other preferences by simply typing:
+Once everything is installed and the shell hooks added, you can open the config file to set your editor and other preferences by simply typing:
 ```console
 foo@bar:~$ hp configure
 ```
-the current build supports four different shells: nushell, zsh, powershell, and bash/dash/anything else that use ~/.bashrc.
+The current build supports four different shells: nushell, zsh, powershell, and bash/dash/anything else that use ~/.bashrc.
 
-to see where all your configuration resources were provisioned, use:
+To see where all your configuration resources were provisioned, use:
 ```console
 foo@bar:~$ hp locate
 Config Directory    -> C:\Users\steph\.config\bunnyhop
@@ -54,8 +57,8 @@ Database Directory  -> C:\Users\steph\.config\bunnyhop\db
 Bunnyhop Executable -> C:\Users\steph\Projects\hop\target\release\bunnyhop.exe
 ```
 
-### how to use
-for general usage help:
+### HOW TO USE
+For general usage help:
 ```console
 foo@bar:~$ hp help # show basic commands
 
@@ -85,12 +88,12 @@ Valid first argument commands are:
 foo@bar:~$ version # show version
 bunnyhop 🐇 v.0.2.4
 ```
-to add a shortcut to your directory with the shortcut name `example`:
+To add a shortcut to your directory with the shortcut name `example`:
 ```console
 foo@bar:~$ hp add example
 [info] Hop created for example.
 ```
-to add a shortcut to your current directory and use the current directory high level name as the shortcut name:
+To add a shortcut to your current directory and use the current directory high level name as the shortcut name:
 ```console
 echo $PWD
 /usr/bin/cargo
@@ -98,7 +101,7 @@ echo $PWD
 foo@bar:~$ hp add
 [info] Hop created for cargo.
 ```
-to add a shortcut to a file that can be opened up in the set editor, use:
+To add a shortcut to a file that can be opened up in the set editor, use:
 ```console
 foo@bar:~$ hp add init.vim # will create a shortcut to init.vim named `init.vim`
 [info] Hop created for init.vim.
@@ -106,13 +109,13 @@ foo@bar:~$ hp add init.vim # will create a shortcut to init.vim named `init.vim`
 foo@bar:~$ hp add init.vim vi # will create a shortcut to init.vim named `vi`
 [info] Hop created for vi.
 ```
-to open a shortcut file in your configured editor of choice, use either of the following:
+To open a shortcut file in your configured editor of choice, use either of the following:
 ```console
 foo@bar:~$ hp edit init.vim # full command consistent with opening a directory for editing
 
 foo@bar:~$ hp init.vim # shortened command that just works for editing files and not directories
 ```
-to delete a shortcut with name `example`:
+To delete a shortcut with name `example`:
 ```console
 foo@bar:~$ rm example # can be used from any location
 [info] Hop removed for shortcut: example.
@@ -126,15 +129,15 @@ foo@bar:~$ hp rm # can be used within the "example" directory
 foo@bar:~$ hp remove example # long form of rm command
 [info] Hop removed for shortcut: example.
 ```
-to jump to the `example` named directory:
+To jump to the `example` named directory:
 ```console
 foo@bar:~$ hp example
 ```
-to jump to the `example` named directory and open your default editor in that directory:
+To jump to the `example` named directory and open your default editor in that directory:
 ```console
 foo@bar:~$ hp edit example
 ```
-to list all saved shortcuts:
+To list all saved shortcuts:
 ```console
 foo@bar:~$ hp ls # shortened form
 appdata  -> C:\Users\steph\AppData\Local
@@ -148,7 +151,7 @@ back     -> C:\Users\steph\Projects\hop
 hop      -> C:\Users\steph\Projects\hop
 hpconf   -> C:\Users\steph\.config\bunnyhop
 ```
-to capture just the full path of a shortcut, you can again use the `locate` command:
+To capture just the full path of a shortcut, you can again use the `locate` command:
 ```console
 foo@bar:~$ hp locate init.vim # show full path to saved file `init.vim`
 C:\Users\you\AppData\Local\nvim\init.vim
@@ -156,8 +159,8 @@ C:\Users\you\AppData\Local\nvim\init.vim
 foo@bar:~$ hp locate example # show full path to saved directory `example`
 C:\Users\you\Documents\example
 ```
-you can use `hp` like `cd` to move into directories or edit files in your current directory (so long as the name doesn't conflict with a saved shortcut name).
-this will then add that directory to the stored history and allow you to jump to it in the future without adding a shortcut directly.
+You can use `hp` like `cd` to move into directories or edit files in your current directory (so long as the name doesn't conflict with a saved shortcut name).
+This will then add that directory to the stored history and allow you to jump to it in the future without adding a shortcut directly.
 ```console
 foo@bar:~$ echo $PWD
 /home/you/projects/hop
@@ -172,7 +175,7 @@ target
 foo@bar:~$ hp src
 [info] Hop created for cargo.
 
-foo@bar: ~$ hp history
+foo@bar:~$ hp history
 src -> /home/you/projects/hop
 
 foo@bar:~$ cd ...
@@ -185,13 +188,27 @@ foo@bar:~$ hp src
 foo@bar:~$ echo $PWD
 /home/you/projects/hop/src
 ```
+### GENERAL FLOW FOR RESOLVING `hop` COMMANDS
+Calling a `hp` command with a shortcut name or path will attempt to do three things to resolve where it should jump you to:
+1) Check if it is within the saved list of shortcuts manually added by the user.
+2) Check if it is within the history list of previous `hp` commands used by the user.
+3) Check if it is a valid location within the file system.
 
-### custom configuration
-by default, you can find the configuration file for `bunnyhop` at `~/.config/bunnyhop/bunnyhop.toml`.
+Requests to `bunnyhop` to jump to a new location will check the above three in their listed order and, if it finds a match, will jump to that match.
 
-check out the config file to see the current options available and to set your personal editors (default is `vi` for Unix and `notepad` for Windows).
+So if you run a command like `hp example`, it will first check the saved shortcuts for a shortcut named `example`.  If it finds it, it will move the user to that location or, if that location is a file, open it in the appropriate editor.
 
-### todo
-1) write a more comprehensive suite of unit tests
-2) add functionality to search stored history for possible locations
-3) add customized editor launch commands (ie allow flags when calling an editor to open a file)
+If it doesn't find anything in the named shortcuts, it will move on to step 2) where it will check the saved history for a path stored under the name `example`.  If it finds a location stored in history with the name `example`, it will move the user to that location or open the file in the appropriate editor.
+
+If it doesn't find anything in the stored history, it will finally check if `example` is a path within the current directory.  If it is, it will move the user to that location or open the file in the appropriate editor.
+
+If all of the above steps have failed to find a relevant entry that `example` represents, it will return a statement like: `[error] Unable to execute hop command: Unable to find referenced shortcut.`
+### CUSTOM CONFIGURATION
+By default, you can find the configuration file for `bunnyhop` at `~/.config/bunnyhop/bunnyhop.toml`.
+
+Check out the config file to see the current options available and to set your personal editors (default is `vi` for Unix and `notepad` for Windows).
+
+### TODO
+1) Write a more comprehensive suite of unit tests.
+2) Add functionality to search stored history for possible locations.
+3) Add customized editor launch commands (ie allow flags when calling an editor to open a file).
