@@ -156,6 +156,38 @@ C:\Users\you\AppData\Local\nvim\init.vim
 foo@bar:~$ hp locate example # show full path to saved directory `example`
 C:\Users\you\Documents\example
 ```
+you can use `hp` like `cd` to move into directories or edit files in your current directory (so long as the name doesn't conflict with a saved shortcut name).
+this will then add that directory to the stored history and allow you to jump to it in the future without adding a shortcut directly.
+```console
+```console
+foo@bar:~$ echo $PWD
+/home/you/projects/hop
+
+foo@bar:~$ ls
+.gitignore
+Cargo.toml
+README.md
+src
+target
+
+foo@bar:~$ hp src
+[info] Hop created for cargo.
+
+foo@bar: ~$ hp history
+src -> /home/you/projects/hop
+
+foo@bar:~$ cd ...
+
+foo@bar:~$ echo $PWD
+/home/you/projects
+
+foo@bar:~$ hp src
+
+foo@bar:~$ echo $PWD
+/home/you/projects/hop/src
+```
+
+```
 ### custom configuration
 by default, you can find the configuration file for `bunnyhop` at `~/.config/bunnyhop/bunnyhop.toml`.
 
