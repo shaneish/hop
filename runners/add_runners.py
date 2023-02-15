@@ -100,43 +100,49 @@ if __name__ == "__main__":
 
     # Configure for nushell
     if ("nu" in argv) or (len(argv) < 2):
-        nu_dir_default_unix = home_dir / ".config" / "nushell" / "env.nu"
-        nu_dir_default_windows = home_dir / "AppData" / "Roaming" / "nushell"
-        nu_dir_correct = None
+        try:
+            nu_dir_default_unix = home_dir / ".config" / "nushell" / "env.nu"
+            nu_dir_default_windows = home_dir / "AppData" / "Roaming" / "nushell"
+            nu_dir_correct = None
 
-        nu_check = run(["nu", "-c", "$nu.env-path"], stdout=PIPE)
-        if nu_dir is not None:
-            nu_dir_correct = Path(nu_dir)
-        elif nu_check.returncode == 0:
-            if nu_check.returncode == 0:
-                nu_dir_correct = Path(nu_check.stdout.decode("utf-8").strip())
-        elif "windows" in platform().lower():
-            if os.path.isdir(nu_dir_default_windows):
-                nu_dir_correct = nu_dir_default_windows
-        add_runner(nu_dir_correct, "nushell", alias, "nu")
+            nu_check = run(["nu", "-c", "$nu.env-path"], stdout=PIPE)
+            if nu_dir is not None:
+                nu_dir_correct = Path(nu_dir)
+            elif nu_check.returncode == 0:
+                if nu_check.returncode == 0:
+                    nu_dir_correct = Path(nu_check.stdout.decode("utf-8").strip())
+            elif "windows" in platform().lower():
+                if os.path.isdir(nu_dir_default_windows):
+                    nu_dir_correct = nu_dir_default_windows
+            add_runner(nu_dir_correct, "nushell", alias, "nu")
+        except:
+            print("Unable to add nushell runners...")
 
     # Configure for pwershell
     if ("ps" in argv) or (len(argv) < 2):
-        ps_check = run(["powershell", "echo $profile"], stdout=PIPE)
-        ps_default_unix = (
-            home_dir / ".config" / "powershell" / "Microsoft.PowerShell_profile.ps1"
-        )
-        ps_dir = None
-
-        if ps_dir is not None:
-            ps_dir = Path(ps_dir) / "profile.ps1"
-        if ps_check.returncode == 0:
-            ps_dir = Path(ps_check.stdout.decode("utf-8").strip())
-        elif os.path.isdir(home_dir / "Documents" / "WindowsPowerShell"):
-            ps_dir = home_dir / "Documents" / "WindowsPowerShell" / "profile.ps1"
-        elif os.path.isdir(home_dir / "OneDrive" / "Documents" / "WindowsPowerShell"):
-            ps_dir = (
-                home_dir
-                / "OneDrive"
-                / "Documents"
-                / "WindowsPowerShell"
-                / "profile.ps1"
+        try:
+            ps_check = run(["powershell", "echo $profile"], stdout=PIPE)
+            ps_default_unix = (
+                home_dir / ".config" / "powershell" / "Microsoft.PowerShell_profile.ps1"
             )
-        elif os.path.isdir(home_dir / ".config"):
-            ps_dir = ps_default_unix
-        add_runner(ps_dir, "powershell", alias, "ps1", ".")
+            ps_dir = None
+
+            if ps_dir is not None:
+                ps_dir = Path(ps_dir) / "profile.ps1"
+            if ps_check.returncode == 0:
+                ps_dir = Path(ps_check.stdout.decode("utf-8").strip())
+            elif os.path.isdir(home_dir / "Documents" / "WindowsPowerShell"):
+                ps_dir = home_dir / "Documents" / "WindowsPowerShell" / "profile.ps1"
+            elif os.path.isdir(home_dir / "OneDrive" / "Documents" / "WindowsPowerShell"):
+                ps_dir = (
+                    home_dir
+                    / "OneDrive"
+                    / "Documents"
+                    / "WindowsPowerShell"
+                    / "profile.ps1"
+                )
+            elif os.path.isdir(home_dir / ".config"):
+                ps_dir = ps_default_unix
+            add_runner(ps_dir, "powershell", alias, "ps1", ".")
+        except:
+            print("Unable to add powershell runners...")

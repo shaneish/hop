@@ -135,8 +135,7 @@ impl Hopper {
         let path_as_string = path.as_ref().display().to_string();
         let query = format!(
             "INSERT OR REPLACE INTO named_hops (name, location) VALUES (\"{}\", \"{}\")",
-            name,
-            &path_as_string
+            name, &path_as_string
         );
         self.db.execute(&query)?;
         println!("[info] Added shortcut: {} -> {}", name, path_as_string);
@@ -146,8 +145,18 @@ impl Hopper {
     fn remove_hop(&mut self, rabbit: Rabbit) -> anyhow::Result<()> {
         let mut is_passthrough = false;
         let statement_check = match rabbit {
-            Rabbit::RequestName(name) => Some((self.db.execute(&format!("DELETE FROM named_hops WHERE name=\"{}\"", &name)), name)),
-            Rabbit::RequestPath(loc) => Some((self.db.execute(&format!("DELETE FROM named_hops WHERE location=\"{}\"", &loc.as_path().display().to_string())), loc.as_path().display().to_string())),
+            Rabbit::RequestName(name) => Some((
+                self.db
+                    .execute(&format!("DELETE FROM named_hops WHERE name=\"{}\"", &name)),
+                name,
+            )),
+            Rabbit::RequestPath(loc) => Some((
+                self.db.execute(&format!(
+                    "DELETE FROM named_hops WHERE location=\"{}\"",
+                    &loc.as_path().display().to_string()
+                )),
+                loc.as_path().display().to_string(),
+            )),
             Rabbit::RequestAmbiguous(name, loc) => {
                 is_passthrough = true;
                 match self.find_hop(name.clone()) {
@@ -167,9 +176,12 @@ impl Hopper {
             match statement_check {
                 Some((statement, name)) => match statement {
                     Ok(_) => println!("[info] Removed shortcut: {}", name),
-                    Err(e) => println!("[error] Failed to remove shortcut: {} with error {}", name, e),
+                    Err(e) => println!(
+                        "[error] Failed to remove shortcut: {} with error {}",
+                        name, e
+                    ),
                 },
-                None => println!("[error] Unable to find shortcut to remove.")
+                None => println!("[error] Unable to find shortcut to remove."),
             };
         };
         Ok(())
@@ -197,7 +209,7 @@ impl Hopper {
     fn print_hop(&self, shortcut_name: String) -> anyhow::Result<()> {
         match self.find_hop(shortcut_name) {
             Some(name) => println!("{}", name),
-            None => println!("[error] Unable to find shortcut.")
+            None => println!("[error] Unable to find shortcut."),
         }
         Ok(())
     }
@@ -214,11 +226,11 @@ impl Hopper {
                     let location_result = statement.read::<String, _>("location");
                     match location_result {
                         Ok(location) => return Some(location),
-                        Err(_) => return None
+                        Err(_) => return None,
                     }
                 }
                 None
-            },
+            }
             Err(_) => return None,
         }
     }

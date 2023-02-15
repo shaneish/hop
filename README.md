@@ -2,7 +2,7 @@
 
 ### WHAT EVEN IS THIS ??
 
-**Tl;dr: a tool to quickly work with you filesystem via saved shortcuts and historical movements. Allows user to both jump to other locations or open files in other locations in an editor of your choice with a single command.**
+**Tl;dr: a tool to quickly work with your filesystem via saved shortcuts and historical movements. Allows user to both jump to other locations or open files in other locations in an editor of your choice with a single command.**
 
 I have a bash/zsh/nushell function named `short` that lets users jump to predefined directories easily.
 
@@ -56,9 +56,9 @@ The current build supports four different shells: nushell, zsh, powershell, and 
 To see where all your configuration resources were provisioned, use:
 ```console
 foo@bar:~$ hp locate
-Config Directory    -> C:\Users\steph\.config\bunnyhop
-Database Directory  -> C:\Users\steph\.config\bunnyhop\db
-Bunnyhop Executable -> C:\Users\steph\Projects\hop\target\release\bunnyhop.exe
+Config Directory    -> C:\Users\you\.config\bunnyhop
+Database Directory  -> C:\Users\you\.config\bunnyhop\db
+Bunnyhop Executable -> C:\Users\you\Projects\hop\target\release\bunnyhop.exe
 ```
 
 ### HOW TO USE
@@ -144,16 +144,16 @@ foo@bar:~$ hp edit example
 To list all saved shortcuts:
 ```console
 foo@bar:~$ hp ls # shortened form
-appdata  -> C:\Users\steph\AppData\Local
-back     -> C:\Users\steph\Projects\hop
-hop      -> C:\Users\steph\Projects\hop
-hpconf   -> C:\Users\steph\.config\bunnyhop
+appdata  -> C:\Users\you\AppData\Local
+back     -> C:\Users\you\Projects\hop
+hop      -> C:\Users\you\Projects\hop
+hpconf   -> C:\Users\you\.config\bunnyhop
 
 foo@bar:~$ hp list # long form
-appdata  -> C:\Users\steph\AppData\Local
-back     -> C:\Users\steph\Projects\hop
-hop      -> C:\Users\steph\Projects\hop
-hpconf   -> C:\Users\steph\.config\bunnyhop
+appdata  -> C:\Users\you\AppData\Local
+back     -> C:\Users\you\Projects\hop
+hop      -> C:\Users\you\Projects\hop
+hpconf   -> C:\Users\you\.config\bunnyhop
 ```
 To capture just the full path of a shortcut, you can again use the `locate` command:
 ```console

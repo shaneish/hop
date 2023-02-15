@@ -15,7 +15,7 @@ pub enum Rabbit {
     File(String, PathBuf),
     RequestName(String),
     RequestPath(PathBuf),
-    RequestAmbiguous(String, PathBuf)
+    RequestAmbiguous(String, PathBuf),
 }
 
 impl Rabbit {
@@ -39,7 +39,10 @@ impl Rabbit {
 
     pub fn request(input: String) -> Self {
         let input_path = PathBuf::from(&input);
-        if input_path.exists() && (&input.len() == &input.replace("/", "").len()) && (&input.len() == &input.replace("\\", "").len()) {
+        if input_path.exists()
+            && (&input.len() == &input.replace("/", "").len())
+            && (&input.len() == &input.replace("\\", "").len())
+        {
             Rabbit::RequestAmbiguous(input, input_path)
         } else if input_path.exists() {
             Rabbit::RequestPath(PathBuf::from(&input))
