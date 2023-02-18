@@ -1,18 +1,14 @@
 pub mod args;
-use anyhow;
 use args::Rabbit;
 use chrono::Local;
 use colored::Colorize;
 use dirs::home_dir;
 use proceed::any_or_quit_with;
 use serde_derive::Deserialize;
-use sqlite;
 use std::{
     collections::HashMap,
-    env::{consts, current_dir, current_exe, var},
-    fs,
-    fs::read_dir,
-    include_str,
+    env::{consts, current_exe, var},
+    fs, include_str,
     io::Write,
     path::{Path, PathBuf},
 };
@@ -56,8 +52,7 @@ impl Env {
         let mut database_dir = match var("HOP_DATABASE_DIRECTORY") {
             Ok(loc) => PathBuf::from(&loc),
             Err(_) => {
-                let mut db_dir_temp =
-                    PathBuf::from(&format!("{}", &config_dir.as_path().display().to_string()));
+                let mut db_dir_temp = PathBuf::from(format!("{}", &config_dir.as_path().display()));
                 db_dir_temp.push("db");
                 db_dir_temp
             }
@@ -106,7 +101,8 @@ impl Hopper {
                 .write_all(default_configs.as_bytes())
                 .expect("[error] Unable to generate default config file.");
         };
-        let toml_str: String = fs::read_to_string(env.config_file.clone()).unwrap();
+        let toml_str: String = fs::read_to_string(env.config_file.clone())
+            .expect("[error] Unable to read config file location.");
         let configs: Config =
             from_str(&toml_str).expect("[error] Unable to parse configuration TOML.");
         let conn = sqlite::open(&env.database_file)?;
@@ -126,18 +122,18 @@ impl Hopper {
 
         Ok(Hopper {
             config: configs,
-            env: env,
+            env,
             db: conn,
         })
     }
 
     fn add_hop<T: AsRef<Path>>(&mut self, path: T, name: &str) -> anyhow::Result<()> {
-        let path_as_string = path.as_ref().display().to_string();
+        let path_as_string = path.as_ref().display();
         let query = format!(
             "INSERT OR REPLACE INTO named_hops (name, location) VALUES (\"{}\", \"{}\")",
             name, &path_as_string
         );
-        self.db.execute(&query)?;
+        self.db.execute(query)?;
         println!("[info] Added shortcut: {} -> {}", name, path_as_string);
         Ok(())
     }
@@ -147,13 +143,13 @@ impl Hopper {
         let statement_check = match rabbit {
             Rabbit::RequestName(name) => Some((
                 self.db
-                    .execute(&format!("DELETE FROM named_hops WHERE name=\"{}\"", &name)),
+                    .execute(format!("DELETE FROM named_hops WHERE name=\"{}\"", &name)),
                 name,
             )),
             Rabbit::RequestPath(loc) => Some((
-                self.db.execute(&format!(
+                self.db.execute(format!(
                     "DELETE FROM named_hops WHERE location=\"{}\"",
-                    &loc.as_path().display().to_string()
+                    &loc.as_path().display()
                 )),
                 loc.as_path().display().to_string(),
             )),
@@ -219,25 +215,26 @@ impl Hopper {
             "SELECT location FROM named_hops WHERE name=\"{}\"",
             &shortcut_name
         );
-        let statement_result = self.db.prepare(&query);
+        let statement_result = self.db.prepare(query);
         match statement_result {
             Ok(mut statement) => {
-                while let Ok(sqlite::State::Row) = statement.next() {
+                if let Ok(sqlite::State::Row) = statement.next() {
                     let location_result = statement.read::<String, _>("location");
                     match location_result {
-                        Ok(location) => return Some(location),
-                        Err(_) => return None,
+                        Ok(location) => Some(location),
+                        Err(_) => None,
                     }
+                } else {
+                    None
                 }
-                None
             }
-            Err(_) => return None,
+            Err(_) => None,
         }
     }
 
     fn output_ambiguous<T: AsRef<Path>>(&self, location: T) {
         let location_path = location.as_ref();
-        let location_string = location.as_ref().display().to_string();
+        let location_string = location.as_ref().display();
         if location_path.is_file() {
             let editor = self.map_editor(&location);
             println!("__cmd__ {} {}", editor, location_string);
@@ -251,8 +248,8 @@ impl Hopper {
             "SELECT location FROM named_hops WHERE name=\"{}\"",
             &shortcut_name
         );
-        let mut statement = self.db.prepare(&query)?;
-        while let Ok(sqlite::State::Row) = statement.next() {
+        let mut statement = self.db.prepare(query)?;
+        if let Ok(sqlite::State::Row) = statement.next() {
             let location = statement.read::<String, _>("location")?;
             let location_path = PathBuf::from(&location);
             self.output_ambiguous(location_path);
@@ -269,7 +266,7 @@ impl Hopper {
                 let history = self.retrieve_history()?;
                 match history.iter().find(|(n, _)| n == &shortcut_name) {
                     Some((short, dir)) => {
-                        self.log_history(&dir, short.to_string())?;
+                        self.log_history(dir, short.to_string())?;
                         self.output_ambiguous(dir);
                         Ok(())
                     }
@@ -280,11 +277,8 @@ impl Hopper {
     }
 
     fn edit_dir(&mut self, bunny: Rabbit) -> anyhow::Result<()> {
-        match bunny {
-            Rabbit::Dir(hop_name, hop_path) => {
-                self.log_history(hop_path, hop_name)?;
-            }
-            _ => {}
+        if let Rabbit::Dir(hop_name, hop_path) = bunny {
+            self.log_history(hop_path, hop_name)?;
         };
         println!("__cmd__ {}", self.config.settings.default_editor);
         Ok(())
@@ -300,7 +294,7 @@ impl Hopper {
     }
 
     fn log_history<T: AsRef<Path>>(&self, loc: T, name: String) -> anyhow::Result<()> {
-        let location = loc.as_ref().display().to_string();
+        let location = loc.as_ref().display();
         if self.config.settings.max_history > 0 {
             let query = format!(
                 "INSERT INTO history (time, name, location) VALUES ({}, \"{}\", \"{}\") ",
@@ -308,7 +302,7 @@ impl Hopper {
                 name,
                 location
             );
-            self.db.execute(&query)?;
+            self.db.execute(query)?;
             let mut count_result = self
                 .db
                 .prepare("SELECT COUNT(*) AS hist_count, MIN(time) AS hist_min FROM history")?;
@@ -316,7 +310,7 @@ impl Hopper {
                 let history_count = count_result.read::<i64, _>("hist_count")?;
                 let history_min = count_result.read::<String, _>("hist_min")?;
                 if history_count > self.config.settings.max_history as i64 {
-                    self.db.execute(&format!(
+                    self.db.execute(format!(
                         "DELETE FROM history WHERE time=\"{}\"",
                         history_min
                     ))?;
@@ -327,21 +321,19 @@ impl Hopper {
     }
 
     fn check_dir(&self, name: &str) -> Option<(PathBuf, String)> {
-        read_dir(current_dir().unwrap())
-            .expect("[error] Unable to search contents of current directory.")
-            .filter(|f| f.is_ok())
-            .map(|f| f.unwrap().path().to_path_buf())
-            .map(|f| {
-                (
-                    f.clone(),
-                    f.file_name()
-                        .expect("[error] Unable to disambiguate file/directory.")
-                        .to_str()
-                        .expect("[error] Unable to convert file/directory name to UTF-8.")
-                        .to_string(),
-                )
-            })
-            .find(|(_, path_end)| path_end == name)
+        let potential_path = PathBuf::from(&name);
+        if potential_path.exists() {
+            let shortcut_name = match &potential_path.file_name() {
+                Some(n) => match n.to_str() {
+                    Some(m) => m.to_string(),
+                    None => name.to_string(),
+                },
+                None => name.to_string(),
+            };
+            Some((potential_path, shortcut_name))
+        } else {
+            None
+        }
     }
 
     fn format_lists(&self, hops: Vec<(String, String)>) {
@@ -381,8 +373,8 @@ impl Hopper {
     }
 
     fn list_hops(&self) -> anyhow::Result<()> {
-        let query = format!("SELECT name, location FROM named_hops");
-        let mut query_result = self.db.prepare(&query)?;
+        let query = "SELECT name, location FROM named_hops";
+        let mut query_result = self.db.prepare(query)?;
         let mut hops: Vec<(String, String)> = Vec::new();
         while let Ok(sqlite::State::Row) = query_result.next() {
             let name = query_result.read::<String, _>("name")?;
@@ -433,18 +425,14 @@ impl Hopper {
             .to_str()
             .expect("[error] Unable to convert current bunnyhop executable path to UTF-8.")
             .to_string()
-            .replace("\\", "/");
+            .replace('\\', "/");
         println!("__cmd__ {} {}", bhop_exe, cmd);
         Ok(())
     }
 
     fn configure(&self) -> anyhow::Result<()> {
         let editor = self.map_editor(&self.env.config_file);
-        println!(
-            "__cmd__ {} {}",
-            editor,
-            &self.env.config_file.display().to_string()
-        );
+        println!("__cmd__ {} {}", editor, &self.env.config_file.display());
         Ok(())
     }
 
@@ -460,7 +448,7 @@ impl Hopper {
                     println!(
                         "__cmd__ {} {}",
                         self.map_editor(&hop_loc),
-                        hop_loc.as_path().display().to_string()
+                        hop_loc.as_path().display()
                     );
                 }
             }
@@ -470,7 +458,7 @@ impl Hopper {
                         self.log_history(&dir, short)?;
                         if dir.is_file() {
                             let editor = self.map_editor(&dir);
-                            println!("__cmd__ {} {}", editor, dir.as_path().display().to_string());
+                            println!("__cmd__ {} {}", editor, dir.as_path().display());
                         };
                     }
                     None => {
@@ -489,12 +477,10 @@ impl Hopper {
     }
 
     fn retrieve_history(&self) -> anyhow::Result<Vec<(String, String)>> {
-        let query = format!(
-            "SELECT name, location, COUNT(location) AS cntl
+        let query = "SELECT name, location, COUNT(location) AS cntl
             FROM history GROUP BY name, location
-            ORDER by cntl DESC"
-        );
-        let mut query_result = self.db.prepare(&query)?;
+            ORDER by cntl DESC";
+        let mut query_result = self.db.prepare(query)?;
         let mut hops: Vec<(String, String)> = Vec::new();
         let mut names: Vec<String> = Vec::new();
         while let Ok(sqlite::State::Row) = query_result.next() {

@@ -1,5 +1,3 @@
-use bhop;
-
 fn main() {
     let command = bhop::args::Cmd::parse();
     let hopper = bhop::Hopper::new();
