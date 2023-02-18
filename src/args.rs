@@ -40,8 +40,8 @@ impl Rabbit {
     pub fn request(input: String) -> Self {
         let input_path = PathBuf::from(&input);
         if input_path.exists()
-            && (&input.len() == &input.replace("/", "").len())
-            && (&input.len() == &input.replace("\\", "").len())
+            && (input == input.replace('/', ""))
+            && (input == input.replace('\\', ""))
         {
             Rabbit::RequestAmbiguous(input, input_path)
         } else if input_path.exists() {

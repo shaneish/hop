@@ -29,7 +29,7 @@ This iteration also includes many improvements over the very simple shell functi
 ### HOW TO INSTALL
 Simply clone this repo and run `make` from the root repo directory.
 
-Current install script that works on the most systems with the most shells requires a system install of `python3` and `cargo`.
+Current install script that works on the most systems with the most shells requires a system install `cargo` (obvi, since it's a tool written in Rust).
 
 If you currently don't have `rust` or `cargo` set up on your system, just run the following command before installing `bunnyhop`
 ```bash
@@ -39,7 +39,7 @@ Once `cargo` is installed, simply run the following to install `bunnyhop`:
 ```bash
 git clone https://github.com/gnoat/hop.github
 cd hop
-make all
+cargo build --release
 ```
 The default runner alias set is `hp`, use this to call `bunnyhop` from the command line (unless you set a custom alias).
 
