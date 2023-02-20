@@ -233,7 +233,8 @@ impl Hopper {
 
     fn output_ambiguous<T: AsRef<Path>>(&self, location: T) {
         let location_path = location.as_ref();
-        let location_string = Self::sanitize(location.as_ref()).unwrap_or(location.as_ref().display().to_string());
+        let location_string =
+            Self::sanitize(location.as_ref()).unwrap_or(location.as_ref().display().to_string());
         if location_path.is_file() {
             let editor = self.map_editor(&location);
             println!("__cmd__ {} {}", editor, location_string);

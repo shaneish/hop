@@ -36,12 +36,13 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
 name = "bhop"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "anyhow",
  "chrono",
  "colored",
  "dirs",
+ "dos2unix",
  "proceed",
  "serde",
  "serde_derive",
@@ -194,6 +195,12 @@ dependencies = [
  "redox_users",
  "winapi",
 ]
+
+[[package]]
+name = "dos2unix"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d30b0d1a3c29746b0e1dd15fd8c6ef90078de39fdd733f55ee461132c079f48f"
 
 [[package]]
 name = "fastrand"

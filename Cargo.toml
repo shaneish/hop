@@ -1,6 +1,6 @@
 [package]
 name = "bhop"
-version = "0.5.0"
+version = "0.5.1"
 edition = "2021"
 authors = ["Shane Stephenson <stephenson.shane.a@gmail.com>"]
 readme = "README.md"
@@ -27,6 +27,7 @@ tempdir = "0.3.7"
 proceed = "0.1.0"
 
 [build-dependencies]
+dos2unix = "0.1.0"
 dirs = "4.0.0"
 anyhow = "1.0"
 

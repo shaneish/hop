@@ -30,6 +30,7 @@
 // With all these updates in place, the current build system should start configuring the new shell
 // for use.
 use dirs::home_dir;
+use dos2unix;
 use std::{
     env::var,
     fs::{read_to_string, OpenOptions},
@@ -287,34 +288,39 @@ impl Runners {
                 println!("[info] Located config file: {}", &config_path.display());
                 let config_file_path = config_path
                     .parent()
-                    .unwrap()
+                    .expect("Failed to get parent directory of config file.")
                     .join(format!(".bunnyhop.{}.{}", shell.call_cmd(), shell.ext()));
-                let mut hop_conf_file = OpenOptions::new()
-                    .write(true)
-                    .create(true)
-                    .truncate(true)
-                    .open(&config_file_path)?;
-                let mut conf_file = OpenOptions::new()
-                    .append(true)
-                    .read(true)
-                    .create(true)
-                    .open(&config_path)?;
-                let exe_name = env!("CARGO_PKG_NAME");
-                let source_cmd = format!(
-                    "{} \"{}\"",
-                    shell.source_cmd(),
-                    &config_file_path.as_path().display()
-                )
-                .replace('\\', "/");
-                let script = shell
-                    .script()
-                    .replace("__HOPPERCMD__", exe_name)
-                    .replace("__SHELL_CALLABLE__", shell.call_cmd())
-                    .replace("__FUNCTION_ALIAS__", &self.alias);
-                hop_conf_file.write_all(script.as_bytes())?;
-                let config_file_contents = read_to_string(config_path)?;
-                if !config_file_contents.contains(&source_cmd) {
-                    conf_file.write_all(format!("\n{}", source_cmd).as_bytes())?;
+                {
+                    let mut hop_conf_file = OpenOptions::new()
+                        .write(true)
+                        .create(true)
+                        .truncate(true)
+                        .open(&config_file_path)?;
+                    let mut conf_file = OpenOptions::new()
+                        .append(true)
+                        .read(true)
+                        .create(true)
+                        .open(&config_path)?;
+                    let exe_name = env!("CARGO_PKG_NAME");
+                    let source_cmd = format!(
+                        "{} \"{}\"",
+                        shell.source_cmd(),
+                        &config_file_path.as_path().display()
+                    )
+                    .replace('\\', "/");
+                    let script = shell
+                        .script()
+                        .replace("__HOPPERCMD__", exe_name)
+                        .replace("__SHELL_CALLABLE__", shell.call_cmd())
+                        .replace("__FUNCTION_ALIAS__", &self.alias);
+                    hop_conf_file.write_all(script.as_bytes())?;
+                    let config_file_contents = read_to_string(config_path)?;
+                    if !config_file_contents.contains(&source_cmd) {
+                        conf_file.write_all(format!("\n{}", source_cmd).as_bytes())?;
+                    }
+                }
+                if !cfg!(windows) {
+                    dos2unix::Dos2Unix::convert(&config_file_path.display().to_string(), true);
                 }
                 Ok(())
             }
