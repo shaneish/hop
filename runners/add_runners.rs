@@ -34,7 +34,7 @@ use std::{
     env::var,
     fs::{read_to_string, OpenOptions},
     io::Write,
-    path::{Path, PathBuf},
+    path::PathBuf,
     process::Command,
 };
 
@@ -288,28 +288,18 @@ impl Runners {
                 let config_file_path = config_path
                     .parent()
                     .unwrap()
-                    .join(format!(".bunnyhop.{}", &shell.ext()));
+                    .join(format!(".bunnyhop.{}.{}", shell.call_cmd(), shell.ext()));
                 let mut hop_conf_file = OpenOptions::new()
                     .write(true)
                     .create(true)
+                    .truncate(true)
                     .open(&config_file_path)?;
                 let mut conf_file = OpenOptions::new()
                     .append(true)
                     .read(true)
                     .create(true)
                     .open(&config_path)?;
-                let exe_parent_dir = if cfg!(debug_assertions) {
-                    "debug"
-                } else {
-                    "release"
-                };
-                let exe_path = Path::new(env!("CARGO_MANIFEST_DIR"))
-                    .join("target")
-                    .join(exe_parent_dir)
-                    .join("bhop")
-                    .display()
-                    .to_string()
-                    .replace('\\', "/");
+                let exe_name = env!("CARGO_PKG_NAME");
                 let source_cmd = format!(
                     "{} \"{}\"",
                     shell.source_cmd(),
@@ -318,7 +308,8 @@ impl Runners {
                 .replace('\\', "/");
                 let script = shell
                     .script()
-                    .replace("__HOPPERCMD__", &exe_path)
+                    .replace("__HOPPERCMD__", exe_name)
+                    .replace("__SHELL_CALLABLE__", shell.call_cmd())
                     .replace("__FUNCTION_ALIAS__", &self.alias);
                 hop_conf_file.write_all(script.as_bytes())?;
                 let config_file_contents = read_to_string(config_path)?;

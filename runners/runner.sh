@@ -1,19 +1,19 @@
 __bunnyhop__() {
-    export out=$(sh -c "__HOPPERCMD__ ${1} ${2} ${3}")
+    export out=$(__SHELL_CALLABLE__ -c "__HOPPERCMD__ ${1} ${2} ${3}")
     if [[ "$out" == "__cd__"* ]]; then
         if [[ "$out" == *"__cmd__"* ]]; then
             cd_cmd=$(echo ${out%%"__cmd__ "*})
             cd_dir=$(echo ${cd_cmd#*" "})
             cd "$cd_dir"
             last_cmd=$(echo ${out##*"__cmd__ "})
-            sh -c "$last_cmd"
+            __SHELL_CALLABLE__ -c "$last_cmd"
         else
             export dir=$(echo ${out#*" "})
             cd $dir
         fi
     elif [[ "$out" == "__cmd__"* ]]; then
         export edit_cmd=$(echo ${out#*" "})
-        sh -c "$edit_cmd"
+        __SHELL_CALLABLE__ -c "$edit_cmd"
     else
         echo "$out"
     fi
