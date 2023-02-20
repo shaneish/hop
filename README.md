@@ -37,9 +37,7 @@ curl https://sh.rustup.rs -sSf | sh
 ```
 Once `cargo` is installed, simply run the following to install `bunnyhop`:
 ```bash
-git clone https://github.com/gnoat/hop.github
-cd hop
-cargo build --release
+cargo install bhop
 ```
 The default runner alias set is `hp`, use this to call `bunnyhop` from the command line (unless you set a custom alias).
 
