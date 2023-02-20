@@ -119,7 +119,6 @@ impl Hopper {
             location TEXT NOT NULL
             )",
         )?;
-
         Ok(Hopper {
             config: configs,
             env,
@@ -128,7 +127,7 @@ impl Hopper {
     }
 
     fn add_hop<T: AsRef<Path>>(&mut self, path: T, name: &str) -> anyhow::Result<()> {
-        let path_as_string = path.as_ref().display();
+        let path_as_string = Self::sanitize(path.as_ref())?;
         let query = format!(
             "INSERT OR REPLACE INTO named_hops (name, location) VALUES (\"{}\", \"{}\")",
             name, &path_as_string
@@ -149,7 +148,7 @@ impl Hopper {
             Rabbit::RequestPath(loc) => Some((
                 self.db.execute(format!(
                     "DELETE FROM named_hops WHERE location=\"{}\"",
-                    &loc.as_path().display()
+                    Self::sanitize(loc.as_path())?
                 )),
                 loc.as_path().display().to_string(),
             )),
@@ -234,7 +233,7 @@ impl Hopper {
 
     fn output_ambiguous<T: AsRef<Path>>(&self, location: T) {
         let location_path = location.as_ref();
-        let location_string = location.as_ref().display();
+        let location_string = Self::sanitize(location.as_ref()).unwrap_or(location.as_ref().display().to_string());
         if location_path.is_file() {
             let editor = self.map_editor(&location);
             println!("__cmd__ {} {}", editor, location_string);
@@ -293,8 +292,20 @@ impl Hopper {
         }
     }
 
+    fn sanitize<T: AsRef<Path>>(p: T) -> anyhow::Result<String> {
+        // Back slashes in Windows paths create so many headaches.  Since Windows accepts forward
+        // slashes in place of back slashes anyways, this will ensure that all paths are absolute
+        // with forward slashes
+        let location = if p.as_ref().is_absolute() {
+            p.as_ref().display().to_string()
+        } else {
+            fs::canonicalize(p.as_ref())?.display().to_string()
+        };
+        Ok(location.replace('\\', "/").replace("//?/", ""))
+    }
+
     fn log_history<T: AsRef<Path>>(&self, loc: T, name: String) -> anyhow::Result<()> {
-        let location = loc.as_ref().display();
+        let location = Self::sanitize(loc.as_ref())?;
         if self.config.settings.max_history > 0 {
             let query = format!(
                 "INSERT INTO history (time, name, location) VALUES ({}, \"{}\", \"{}\") ",
