@@ -1,12 +1,12 @@
 [package]
 name = "bhop"
-version = "0.4.0"
+version = "0.5.0"
 edition = "2021"
 authors = ["Shane Stephenson <stephenson.shane.a@gmail.com>"]
 readme = "README.md"
 description = "Small CLI tool to help you hop around the shell."
-homepage = "https://github.com/gnoat/hop"
-repository = "https://github.com/gnoat/hop"
+homepage = "https://github.com/UnsafeOats/hop"
+repository = "https://github.com/UnsafeOats/hop"
 license = "MIT"
 keywords = ["cli", "cd", "hop", "navigate", "shortcut"]
 
