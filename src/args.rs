@@ -68,6 +68,7 @@ pub enum Cmd {
     EditDir(Rabbit),
     ShowHistory,
     PullHistory(Rabbit),
+    Search(Option<String>),
 }
 
 impl Cmd {
@@ -96,7 +97,10 @@ impl Cmd {
                     Some(name) => Cmd::Remove(Rabbit::request(name)),
                     None => Cmd::Remove(Rabbit::request(current_dir.display().to_string())),
                 },
-                "ls" | "list" => Cmd::Passthrough("_ls".to_string()),
+                "ls" | "list" => match env::args().nth(2) {
+                    Some(name) => Cmd::LocateShortcut(name),
+                    None => Cmd::Passthrough("_ls".to_string()),
+                },
                 "_ls" => Cmd::ListHops,
                 "version" | "v" => Cmd::Passthrough("_version".to_string()),
                 "_version" => Cmd::PrintMsg(format!(
@@ -114,12 +118,9 @@ impl Cmd {
                     Some(name) => Cmd::HopDirAndEdit(name),
                     None => Cmd::EditDir(Rabbit::from(current_dir, None)),
                 },
-                "locate" => match env::args().nth(2) {
-                    Some(name) => Cmd::LocateShortcut(name),
-                    None => Cmd::Passthrough("_list_all_history_hops".to_string()),
-                },
+                "locate" => Cmd::Passthrough("_list_all_history_hops".to_string()),
                 "_list_all_history_hops" => Cmd::LocateBunnyhop,
-                "history" => match env::args().nth(2) {
+                "history" | "hist" => match env::args().nth(2) {
                     Some(arg) => Cmd::Passthrough(format!("_history {}", arg)),
                     None => Cmd::Passthrough("_history".to_string()),
                 },
@@ -127,6 +128,11 @@ impl Cmd {
                     Some(name) => Cmd::PullHistory(Rabbit::request(name)),
                     None => Cmd::ShowHistory,
                 },
+                "search" => match env::args().nth(2) {
+                    Some(term) => Cmd::Passthrough(format!("_search {}", term)),
+                    None => Cmd::Passthrough("_search".to_string()),
+                },
+                "_search" => Cmd::Search(env::args().nth(2)),
                 whatevs => Cmd::Use(Rabbit::RequestName(whatevs.to_string())),
             },
             None => Cmd::PrintMsg("[error] Unable to parse current arguments.".to_string()),
@@ -141,7 +147,7 @@ impl Hopper {
             Cmd::Use(bunny) => self.just_do_it(bunny),
             Cmd::SetBrb(loc) => self.brb(loc),
             Cmd::BrbHop => self.use_hop("back".to_string()),
-            Cmd::ListHops => self.list_hops(),
+            Cmd::ListHops => self.list_hops(None),
             Cmd::PrintHelp => Self::print_help(),
             Cmd::Remove(bunny) => self.remove_hop(bunny),
             Cmd::Configure => self.configure(),
@@ -149,8 +155,9 @@ impl Hopper {
             Cmd::LocateShortcut(name) => self.print_hop(name),
             Cmd::HopDirAndEdit(name) => self.hop_to_and_open_dir(name),
             Cmd::EditDir(bunny) => self.edit_dir(bunny),
-            Cmd::ShowHistory => self.show_history(),
+            Cmd::ShowHistory => self.show_history(None),
             Cmd::PullHistory(bunny) => self.search_history(bunny),
+            Cmd::Search(filter_condition) => self.search_all(filter_condition),
             Cmd::PrintMsg(msg) => {
                 println!("{}", msg);
                 Ok(())

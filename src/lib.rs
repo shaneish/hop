@@ -296,7 +296,7 @@ impl Hopper {
     fn sanitize<T: AsRef<Path>>(p: T) -> anyhow::Result<String> {
         // Back slashes in Windows paths create so many headaches.  Since Windows accepts forward
         // slashes in place of back slashes anyways, this will ensure that all paths are absolute
-        // with forward slashes
+        // with consistent forward slashes
         let location = if p.as_ref().is_absolute() {
             p.as_ref().display().to_string()
         } else {
@@ -348,9 +348,30 @@ impl Hopper {
         }
     }
 
-    fn format_lists(&self, hops: Vec<(String, String)>) {
-        let max_name_size = hops.iter().map(|(name, _)| name.len()).max().unwrap_or(0);
-        let mut formatted_hops: Vec<String> = hops
+    fn search_all(&self, filter_condition: Option<String>) -> anyhow::Result<()> {
+        println!("{}", "Saved Hops:".bold());
+        self.list_hops(filter_condition.clone())?;
+        println!("\n{}", "Historical Hops:".bold());
+        self.show_history(filter_condition)?;
+        Ok(())
+    }
+
+    fn format_lists(&self, hops: Vec<(String, String)>, filter_string: Option<String>) {
+        let filter_condition = if filter_string.is_some() {
+            filter_string.unwrap()
+        } else {
+            "".to_string()
+        };
+        let filtered_hops: Vec<(String, String)> = hops
+            .into_iter()
+            .filter(|(n, l)| n.contains(&filter_condition) || l.contains(&filter_condition))
+            .collect();
+        let max_name_size = filtered_hops
+            .iter()
+            .map(|(name, _)| name.len())
+            .max()
+            .unwrap_or(0);
+        let mut formatted_hops: Vec<String> = filtered_hops
             .into_iter()
             .map(|(name, location)| {
                 (
@@ -384,7 +405,7 @@ impl Hopper {
         }
     }
 
-    fn list_hops(&self) -> anyhow::Result<()> {
+    fn list_hops(&self, filter_string: Option<String>) -> anyhow::Result<()> {
         let query = "SELECT name, location FROM named_hops";
         let mut query_result = self.db.prepare(query)?;
         let mut hops: Vec<(String, String)> = Vec::new();
@@ -393,7 +414,7 @@ impl Hopper {
             let location = query_result.read::<String, _>("location")?;
             hops.push((name, location));
         }
-        self.format_lists(hops);
+        self.format_lists(hops, filter_string);
         Ok(())
     }
 
@@ -424,6 +445,9 @@ impl Hopper {
             "config".cyan().bold(),
             "locate".cyan().bold(),
             "history".cyan().bold(),
+            "hist".cyan().bold(),
+            "search".cyan().bold(),
+            "arg2".bright_red(),
             "...".cyan().bold(),
             "hp".bold()
         );
@@ -482,9 +506,9 @@ impl Hopper {
         Ok(())
     }
 
-    fn show_history(&self) -> anyhow::Result<()> {
+    fn show_history(&self, filter_condition: Option<String>) -> anyhow::Result<()> {
         let hops = self.retrieve_history()?;
-        self.format_lists(hops);
+        self.format_lists(hops, filter_condition);
         Ok(())
     }
 
@@ -570,7 +594,7 @@ impl Hopper {
                     .to_string(),
             ),
         ];
-        self.format_lists(loc_vec);
+        self.format_lists(loc_vec, None);
         Ok(())
     }
 }
