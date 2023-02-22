@@ -17,14 +17,16 @@ Valid first argument commands are:
     6) {}: open a file or directory within your editor of choice.
     7) {} or {}: open your bunnyhop configuration file.
     8) {}: show all relevant installation directories if no second argument
-        is given.  If second argument is given, list the full path to the given
-        argument.
-    9) {}: show all available shortcuts currently saved in history.  If second argument
+        is given.
+    9) {} or {}: show all available shortcuts currently saved in history.  If second argument
         is given, finds associated value in history.  If second argument is a valid
         path, shows the shortcut name for that path (if it exists).  If second
         argument is a shortcut name, shows the most commonly used path for that
         shortcut name (if it exists).
-    10) {}: Any other first arguments given will be checked to see if it
+    10) {}: search saved shortcuts and active history for names and locations that contain the
+        substring given by {}.  If not substring specified, will print all saved shortcuts and
+        active history.
+    11) {}: Any other first arguments given will be checked to see if it
         represents a valid directory/file to hop to.  This input can be a named
         shortcut, a file/directory in the current directory, or a file/directory
         from previous {} commands.
