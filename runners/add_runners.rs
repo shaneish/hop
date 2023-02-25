@@ -30,7 +30,6 @@
 // With all these updates in place, the current build system should start configuring the new shell
 // for use.
 use dirs::home_dir;
-use dos2unix;
 use std::{
     env::var,
     fs::{read_to_string, OpenOptions},

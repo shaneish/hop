@@ -55,6 +55,8 @@ fn test_read_default_configs() {
             default_editor: get_default_editor(),
             max_history: 300,
             ls_display_block: 0,
+            print_color_primary: Some([51, 255, 255]),
+            print_color_secondary: Some([51, 255, 153]),
         },
         editors: Some(HashMap::new()),
     };
@@ -75,7 +77,7 @@ fn test_read_configs_with_alt_editors() {
     alt_toml_file
         .write_all(
             b"[settings]\ndefault_editor=\"vi\"\nmax_history=100\nls_display_block=10\n
-                            [editors]\npy=\"nano\"\nipynb=\"code\"\nrust=\"nvim\"",
+              [editors]\npy=\"nano\"\nipynb=\"code\"\nrust=\"nvim\"",
         )
         .expect("Unable to generate alternate hop.toml.");
     let hopper = get_test_hopper(&config_dir);
@@ -89,6 +91,8 @@ fn test_read_configs_with_alt_editors() {
             default_editor: "vi".to_string(),
             max_history: 100,
             ls_display_block: 10,
+            print_color_primary: None,
+            print_color_secondary: None,
         },
         editors: Some(expected_editors),
     };

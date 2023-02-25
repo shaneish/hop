@@ -25,6 +25,21 @@ max_history=300
 # before displaying the next N shortcuts.
 ls_display_block=0
 
+# Choose the primary and secondary colors for formatting printing.
+# Use true color format to select the colors.
+# Example colors are:
+#   blue: [51, 153, 255]
+#   cyan: [51, 255, 255]
+#   pink: [255, 51, 153]
+#   red: [255, 51, 51]
+#   green: [51, 255, 153]
+#   bright green: [153, 255, 51]
+#   yellow: [255, 255, 51]
+#   purple: [153, 51, 255]
+#   orange: [255, 153, 51]
+print_color_primary=[51, 255, 255] # cyan
+print_color_secondary=[51, 255, 153] # green
+
 [editors]
 # Use this section to define alternate editors for individual
 # file extensions.  Set the extension on the right and the command
