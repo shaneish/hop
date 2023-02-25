@@ -25,6 +25,8 @@ pub struct Settings {
     pub default_editor: String,
     pub max_history: usize,
     pub ls_display_block: usize,
+    pub print_color_primary: Option<[u8; 3]>,
+    pub print_color_secondary: Option<[u8; 3]>,
 }
 
 #[derive(Debug)]
@@ -44,12 +46,12 @@ impl Env {
                 home_dir
             }
         };
-        let mut hop_config_file = PathBuf::from(&config_dir);
-        match var("HOP_CONFIG_FILE_NAME") {
-            Ok(name) => hop_config_file.push(name),
-            Err(_) => hop_config_file.push("bunnyhop.toml"),
+        let mut config_file = PathBuf::from(&config_dir);
+        match var("config_file_NAME") {
+            Ok(name) => config_file.push(name),
+            Err(_) => config_file.push("bunnyhop.toml"),
         };
-        let mut database_dir = match var("HOP_DATABASE_DIRECTORY") {
+        let mut database_file = match var("HOP_DATABASE_DIRECTORY") {
             Ok(loc) => PathBuf::from(&loc),
             Err(_) => {
                 let mut db_dir_temp = PathBuf::from(format!("{}", &config_dir.as_path().display()));
@@ -57,20 +59,20 @@ impl Env {
                 db_dir_temp
             }
         };
-        if !Path::new(&database_dir).exists() {
-            match fs::create_dir_all(&database_dir) {
+        if !Path::new(&database_file).exists() {
+            match fs::create_dir_all(&database_file) {
                 Ok(_) => {}
                 Err(e) => println!("[error] Error creating database directory: {}", e),
             };
         };
         match var("HOP_DATABASE_FILE_NAME") {
-            Ok(name) => database_dir.push(name),
-            Err(_) => database_dir.push("bunnyhop.db"),
+            Ok(name) => database_file.push(name),
+            Err(_) => database_file.push("bunnyhop.db"),
         };
 
         Env {
-            config_file: hop_config_file,
-            database_file: database_dir,
+            config_file,
+            database_file,
         }
     }
 }
@@ -356,12 +358,8 @@ impl Hopper {
         Ok(())
     }
 
-    fn format_lists(&self, hops: Vec<(String, String)>, filter_string: Option<String>) {
-        let filter_condition = if filter_string.is_some() {
-            filter_string.unwrap()
-        } else {
-            "".to_string()
-        };
+    fn print_formatted_maps(&self, hops: Vec<(String, String)>, filter_string: Option<String>) {
+        let filter_condition = filter_string.unwrap_or("".to_string());
         let filtered_hops: Vec<(String, String)> = hops
             .into_iter()
             .filter(|(n, l)| n.contains(&filter_condition) || l.contains(&filter_condition))
@@ -371,6 +369,8 @@ impl Hopper {
             .map(|(name, _)| name.len())
             .max()
             .unwrap_or(0);
+        let first_col = self.config.settings.print_color_primary.unwrap_or([51, 255, 255]);
+        let sec_col = self.config.settings.print_color_secondary.unwrap_or([51, 255, 153]);
         let mut formatted_hops: Vec<String> = filtered_hops
             .into_iter()
             .map(|(name, location)| {
@@ -384,10 +384,13 @@ impl Hopper {
             .map(|(ws, name, location)| {
                 format!(
                     "{}{}{} {}",
-                    name.bold().cyan(),
+                    name.truecolor(first_col[0], first_col[1], first_col[2])
+                        .bold(),
                     ws,
                     "->".bright_white().bold(),
-                    location.green().bold()
+                    location
+                        .truecolor(sec_col[0], sec_col[1], sec_col[2])
+                        .bold()
                 )
             })
             .collect();
@@ -414,7 +417,7 @@ impl Hopper {
             let location = query_result.read::<String, _>("location")?;
             hops.push((name, location));
         }
-        self.format_lists(hops, filter_string);
+        self.print_formatted_maps(hops, filter_string);
         Ok(())
     }
 
@@ -508,7 +511,7 @@ impl Hopper {
 
     fn show_history(&self, filter_condition: Option<String>) -> anyhow::Result<()> {
         let hops = self.retrieve_history()?;
-        self.format_lists(hops, filter_condition);
+        self.print_formatted_maps(hops, filter_condition);
         Ok(())
     }
 
@@ -594,7 +597,7 @@ impl Hopper {
                     .to_string(),
             ),
         ];
-        self.format_lists(loc_vec, None);
+        self.print_formatted_maps(loc_vec, None);
         Ok(())
     }
 }
