@@ -203,6 +203,15 @@ impl Hopper {
         }
     }
 
+    fn format_editor<T: AsRef<str>>(&self, editor: T, path: T) {
+        if editor.as_ref().contains("{}") {
+            let imputed = editor.as_ref().replace("{}", path.as_ref());
+            println!("__cmd__ {}", imputed);
+        } else {
+            println!("__cmd__ {} {}", editor.as_ref(), path.as_ref());
+        }
+    }
+
     fn print_hop(&self, shortcut_name: String) -> anyhow::Result<()> {
         match self.find_hop(shortcut_name) {
             Some(name) => println!("{}", name),
@@ -239,7 +248,7 @@ impl Hopper {
             Self::sanitize(location.as_ref()).unwrap_or(location.as_ref().display().to_string());
         if location_path.is_file() {
             let editor = self.map_editor(&location);
-            println!("__cmd__ {} {}", editor, location_string);
+            self.format_editor(editor, location_string);
         } else if location_path.is_dir() {
             println!("__cd__ {}", location_string);
         };
@@ -360,37 +369,40 @@ impl Hopper {
 
     fn print_formatted_maps(&self, hops: Vec<(String, String)>, filter_string: Option<String>) {
         let filter_condition = filter_string.unwrap_or("".to_string());
-        let filtered_hops: Vec<(String, String)> = hops
+        let filtered_hops: Vec<(String, String, String)> = hops
             .into_iter()
-            .filter(|(n, l)| n.contains(&filter_condition) || l.contains(&filter_condition))
+            .map(|(n, l)| (n, if PathBuf::from(&l).is_file() { "file".to_string() } else { "dir".to_string() }, l))
+            .filter(|(n, t, l)| n.contains(&filter_condition) || l.contains(&filter_condition) || t.contains(&filter_condition))
             .collect();
         let max_name_size = filtered_hops
             .iter()
-            .map(|(name, _)| name.len())
+            .map(|(name, _, _)| name.len())
             .max()
             .unwrap_or(0);
         let first_col = self.config.settings.print_color_primary.unwrap_or([51, 255, 255]);
         let sec_col = self.config.settings.print_color_secondary.unwrap_or([51, 255, 153]);
         let mut formatted_hops: Vec<String> = filtered_hops
             .into_iter()
-            .map(|(name, location)| {
+            .map(|(name, type_loc, location)| {
                 (
                     String::from_utf8(vec![b' '; max_name_size - name.len() + 1])
                         .unwrap_or(" ".to_string()),
                     name,
                     location,
+                    type_loc,
                 )
             })
-            .map(|(ws, name, location)| {
+            .map(|(ws, name, location, type_loc)| {
                 format!(
-                    "{}{}{} {}",
+                    "{}{}{} {} [{}]",
                     name.truecolor(first_col[0], first_col[1], first_col[2])
                         .bold(),
                     ws,
                     "->".bright_white().bold(),
-                    location
+                    &location
                         .truecolor(sec_col[0], sec_col[1], sec_col[2])
-                        .bold()
+                        .bold(),
+                    type_loc.bold(),
                 )
             })
             .collect();
@@ -465,13 +477,13 @@ impl Hopper {
             .expect("[error] Unable to convert current bunnyhop executable path to UTF-8.")
             .to_string()
             .replace('\\', "/");
-        println!("__cmd__ {} {}", bhop_exe, cmd);
+        self.format_editor(bhop_exe, cmd);
         Ok(())
     }
 
     fn configure(&self) -> anyhow::Result<()> {
         let editor = self.map_editor(&self.env.config_file);
-        println!("__cmd__ {} {}", editor, &self.env.config_file.display());
+        self.format_editor(editor, self.env.config_file.display().to_string());
         Ok(())
     }
 
@@ -484,10 +496,9 @@ impl Hopper {
                     self.use_hop(shortcut_name)?;
                     println!("__cmd__ {}", self.config.settings.default_editor);
                 } else if hop_loc.is_file() {
-                    println!(
-                        "__cmd__ {} {}",
+                    self.format_editor(
                         self.map_editor(&hop_loc),
-                        hop_loc.as_path().display()
+                        hop_loc.as_path().display().to_string()
                     );
                 }
             }
@@ -497,7 +508,7 @@ impl Hopper {
                         self.log_history(&dir, short)?;
                         if dir.is_file() {
                             let editor = self.map_editor(&dir);
-                            println!("__cmd__ {} {}", editor, dir.as_path().display());
+                            self.format_editor(editor, dir.as_path().display().to_string());
                         };
                     }
                     None => {

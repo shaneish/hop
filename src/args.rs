@@ -118,8 +118,8 @@ impl Cmd {
                     Some(name) => Cmd::HopDirAndEdit(name),
                     None => Cmd::EditDir(Rabbit::from(current_dir, None)),
                 },
-                "locate" => Cmd::Passthrough("_list_all_history_hops".to_string()),
-                "_list_all_history_hops" => Cmd::LocateBunnyhop,
+                "locate" => Cmd::Passthrough("_locate_bunnyhop_resources".to_string()),
+                "_locate_bunnyhop_resources" => Cmd::LocateBunnyhop,
                 "history" | "hist" => match env::args().nth(2) {
                     Some(arg) => Cmd::Passthrough(format!("_history {}", arg)),
                     None => Cmd::Passthrough("_history".to_string()),

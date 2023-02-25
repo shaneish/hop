@@ -27,9 +27,7 @@ However, as this required maintaining separate scripts for the various shells I 
 This iteration also includes many improvements over the very simple shell function used before (and doesn't clutter you're system with unnecessary symlinks).
 
 ### HOW TO INSTALL
-Simply clone this repo and run `make` from the root repo directory.
-
-Current install script that works on the most systems with the most shells requires a system install `cargo` (obvi, since it's a tool written in Rust).
+Install requires `cargo` (obvi, since it's a tool written in Rust).
 
 If you currently don't have `rust` or `cargo` set up on your system, just run the following command before installing `bunnyhop`
 ```bash
@@ -41,13 +39,14 @@ cargo install bhop
 ```
 The default runner alias set is `hp`, use this to call `bunnyhop` from the command line (unless you set a custom alias).
 
-If you'd like to use a different alias to call `bunnyhop` from your terminal, simple set the environment variable "**BUNNYHOP_SHELL_ALIAS**" prior to running the `make` command.
+If you'd like to use a different alias to call `bunnyhop` from your terminal, simple set the environment variable "**BUNNYHOP_SHELL_ALIAS**" prior to running the `cargo install bhop` command.
 
-If you'd like to change to a different alias after installion, again you can just set the environment variable "**BUNNYHOP_SHELL_ALIAS**" and rerun the appropriate `make` command.
+If you'd like to change to a different alias after installion, again you can just set the environment variable "**BUNNYHOP_SHELL_ALIAS**" and rerun the appropriate `cargo install bhop` command.
 
 Once everything is installed and the shell hooks added, you can open the config file to set your editor and other preferences by simply typing:
 ```console
-foo@bar:~$ hp configure
+foo@bar:~$ hp configure # full command
+foo@bar:~$ hp conf # shortened command
 ```
 The current build supports four different shells: nushell, zsh, powershell, and bash/dash/anything else that use ~/.bashrc.
 
@@ -69,6 +68,8 @@ hp arg1 arg2
     2) Second argument is optional.
 
 Valid first argument commands are:
+    1) add: command to add a shortcut to the current directory.
+        If a second argument is given, that argument is the name that will
         be used to refer to the shortcut for future use.
         If no second argument is given, the high level name will be used.
     2) ls or list: command to list the current shortcuts and their names.
@@ -80,15 +81,22 @@ Valid first argument commands are:
     6) edit: open a file or directory within your editor of choice.
     7) configure or config: open your bunnyhop configuration file.
     8) locate: show all relevant installation directories if no second argument
-        is given.  If second argument is given, list the full path to the given
-        argument.
-    9) ...: Any other first arguments given will be checked to see if it
+        is given.
+    9) history or hist: show all available shortcuts currently saved in history.  If second argument
+        is given, finds associated value in history.  If second argument is a valid
+        path, shows the shortcut name for that path (if it exists).  If second
+        argument is a shortcut name, shows the most commonly used path for that
+        shortcut name (if it exists).
+    10) search: search saved shortcuts and active history for names and locations that contain the
+        substring given by arg2.  If not substring specified, will print all saved shortcuts and
+        active history.
+    11) ...: Any other first arguments given will be checked to see if it
         represents a valid directory/file to hop to.  This input can be a named
         shortcut, a file/directory in the current directory, or a file/directory
         from previous hp commands.
 
 foo@bar:~$ version # show version
-bunnyhop 🐇 v.0.2.4
+bunnyhop 🐇 v.0.5.5
 ```
 To add a shortcut to your directory with the shortcut name `example`:
 ```console
