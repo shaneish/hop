@@ -116,9 +116,9 @@ impl Hopper {
         )?;
         conn.execute(
             "CREATE TABLE IF NOT EXISTS history (
-            time TEXT,
             name TEXT NOT NULL,
             location TEXT NOT NULL
+            usage INTEGER NOT NULL
             )",
         )?;
         Ok(Hopper {
@@ -263,6 +263,7 @@ impl Hopper {
         if let Ok(sqlite::State::Row) = statement.next() {
             let location = statement.read::<String, _>("location")?;
             let location_path = PathBuf::from(&location);
+            self.log_history(&location_path, shortcut_name)?;
             self.output_ambiguous(location_path);
             return Ok(());
         }
@@ -318,27 +319,36 @@ impl Hopper {
 
     fn log_history<T: AsRef<Path>>(&self, loc: T, name: String) -> anyhow::Result<()> {
         let location = Self::sanitize(loc.as_ref())?;
-        if self.config.settings.max_history > 0 {
-            let query = format!(
-                "INSERT INTO history (time, name, location) VALUES ({}, \"{}\", \"{}\") ",
-                Local::now().format("%Y%m%d%H%M%S"),
-                name,
-                location
-            );
-            self.db.execute(query)?;
-            let mut count_result = self
-                .db
-                .prepare("SELECT COUNT(*) AS hist_count, MIN(time) AS hist_min FROM history")?;
-            if let Ok(sqlite::State::Row) = count_result.next() {
-                let history_count = count_result.read::<i64, _>("hist_count")?;
-                let history_min = count_result.read::<String, _>("hist_min")?;
-                if history_count > self.config.settings.max_history as i64 {
-                    self.db.execute(format!(
-                        "DELETE FROM history WHERE time=\"{}\"",
-                        history_min
-                    ))?;
+        let mut count_result = self
+            .db
+            .prepare("SELECT COUNT(*) AS hist_count FROM history")?;
+        if let Ok(sqlite::State::Row) = count_result.next() {
+            let count = count_result.read::<i64, _>("hist_count")?;
+            if (count >= self.config.settings.max_history as i64) && (self.config.settings.max_history as i64 != 0) {
+                let retrieve_query = format!(
+                    "SELECT location, name, usage FROM history WHERE name=\"{}\" AND location=\"{}\"",
+                    name,
+                    location,
+                );
+                let mut retrieve_result = self.db.prepare(retrieve_query)?;
+                if let Ok(sqlite::State::Row) = retrieve_result.next() {
+                    let usage = retrieve_result.read::<i64, _>("usage")?;
+                    let update_query = format!(
+                        "UPDATE history SET usage={} WHERE name=\"{}\" AND location=\"{}\"",
+                        usage + 1,
+                        name,
+                        location
+                    );
+                    self.db.execute(update_query)?;
+                    return Ok(());
+                } else {
+                    let insert_query = format!(
+                        "INSERT INTO history (name, location, usage) VALUES (\"{}\", \"{}\", 1)",
+                        name, location
+                    );
+                    self.db.execute(insert_query)?;
                 };
-            };
+            }
         };
         Ok(())
     }
@@ -496,6 +506,7 @@ impl Hopper {
                     self.use_hop(shortcut_name)?;
                     println!("__cmd__ {}", self.config.settings.default_editor);
                 } else if hop_loc.is_file() {
+                    self.log_history(&hop_loc, shortcut_name)?;
                     self.format_editor(
                         self.map_editor(&hop_loc),
                         hop_loc.as_path().display().to_string()
@@ -527,9 +538,9 @@ impl Hopper {
     }
 
     fn retrieve_history(&self) -> anyhow::Result<Vec<(String, String)>> {
-        let query = "SELECT name, location, COUNT(location) AS cntl
-            FROM history GROUP BY name, location
-            ORDER by cntl DESC";
+        let query = "SELECT name, location, usage
+            FROM history
+            ORDER by usage DESC";
         let mut query_result = self.db.prepare(query)?;
         let mut hops: Vec<(String, String)> = Vec::new();
         let mut names: Vec<String> = Vec::new();

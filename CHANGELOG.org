@@ -1,0 +1,16 @@
+#+title: CHANGES
+#+author: Shane Stephenson
+
+* TODO: 0.6.0
+  - Update history table to keep track of count
+  - Add history logging for each `hp` command that changes directory (not just moving directly to a directory)
+  - Update so that opening a file to edit will `cd` into the directory of the file prior to opening it
+  - Update so that every dir is a group
+
+* TODO: Future
+   - Change input to use traditional flags (e.g. `--help` instead of `-h`) instead of straight command chaining
+   - Add ability to create groups of files that can be opened together (e.g. `hp add group` and `hp edit group`) at one time
+     - Each group will have one root directory which can be specified manually or inferred if not specified.
+     - If inferred, will calculate the highest-level directory within which all files in the group are in subdirectories of the root directory.
+
+
