@@ -6,6 +6,7 @@
   - Add history logging for each `hp` command that changes directory (not just moving directly to a directory)
   - Update so that opening a file to edit will `cd` into the directory of the file prior to opening it
   - Update so that every dir is a group
+  - Add options to change casing and remove punctuation from inferred group & file names
 
 * TODO: Future
    - Change input to use traditional flags (e.g. `--help` instead of `-h`) instead of straight command chaining

@@ -1,6 +1,5 @@
 pub mod args;
 use args::Rabbit;
-use chrono::Local;
 use colored::Colorize;
 use dirs::home_dir;
 use proceed::any_or_quit_with;
@@ -117,7 +116,7 @@ impl Hopper {
         conn.execute(
             "CREATE TABLE IF NOT EXISTS history (
             name TEXT NOT NULL,
-            location TEXT NOT NULL
+            location TEXT NOT NULL,
             usage INTEGER NOT NULL
             )",
         )?;
@@ -203,7 +202,11 @@ impl Hopper {
         }
     }
 
-    fn format_editor<T: AsRef<str>>(&self, editor: T, path: T) {
+    fn format_editor<T: AsRef<str>>(&self, editor: T, path: T, move_to: Option<T>) {
+        match move_to {
+            Some(m) => println!("__cd__ {}", m.as_ref()),
+            None => (),
+        };
         if editor.as_ref().contains("{}") {
             let imputed = editor.as_ref().replace("{}", path.as_ref());
             println!("__cmd__ {}", imputed);
@@ -248,7 +251,8 @@ impl Hopper {
             Self::sanitize(location.as_ref()).unwrap_or(location.as_ref().display().to_string());
         if location_path.is_file() {
             let editor = self.map_editor(&location);
-            self.format_editor(editor, location_string);
+            let dir = location_path.parent().unwrap_or(Path::new(".")).display().to_string();
+            self.format_editor(editor, location_string, Some(dir));
         } else if location_path.is_dir() {
             println!("__cd__ {}", location_string);
         };
@@ -324,7 +328,7 @@ impl Hopper {
             .prepare("SELECT COUNT(*) AS hist_count FROM history")?;
         if let Ok(sqlite::State::Row) = count_result.next() {
             let count = count_result.read::<i64, _>("hist_count")?;
-            if (count >= self.config.settings.max_history as i64) && (self.config.settings.max_history as i64 != 0) {
+            if (count >= self.config.settings.max_history as i64) || (self.config.settings.max_history as i64 == 0) {
                 let retrieve_query = format!(
                     "SELECT location, name, usage FROM history WHERE name=\"{}\" AND location=\"{}\"",
                     name,
@@ -487,13 +491,13 @@ impl Hopper {
             .expect("[error] Unable to convert current bunnyhop executable path to UTF-8.")
             .to_string()
             .replace('\\', "/");
-        self.format_editor(bhop_exe, cmd);
+        self.format_editor(bhop_exe, cmd, None);
         Ok(())
     }
 
     fn configure(&self) -> anyhow::Result<()> {
         let editor = self.map_editor(&self.env.config_file);
-        self.format_editor(editor, self.env.config_file.display().to_string());
+        self.format_editor(editor, self.env.config_file.display().to_string(), None);
         Ok(())
     }
 
@@ -507,9 +511,11 @@ impl Hopper {
                     println!("__cmd__ {}", self.config.settings.default_editor);
                 } else if hop_loc.is_file() {
                     self.log_history(&hop_loc, shortcut_name)?;
+                    let dir = hop_loc.parent().unwrap_or(Path::new(".")).display().to_string();
                     self.format_editor(
                         self.map_editor(&hop_loc),
-                        hop_loc.as_path().display().to_string()
+                        hop_loc.as_path().display().to_string(),
+                        Some(dir)
                     );
                 }
             }
@@ -519,7 +525,8 @@ impl Hopper {
                         self.log_history(&dir, short)?;
                         if dir.is_file() {
                             let editor = self.map_editor(&dir);
-                            self.format_editor(editor, dir.as_path().display().to_string());
+                            let file_dir = dir.parent().unwrap_or(Path::new(".")).display().to_string();
+                            self.format_editor(editor, dir.as_path().display().to_string(), Some(file_dir));
                         };
                     }
                     None => {
@@ -547,6 +554,7 @@ impl Hopper {
         while let Ok(sqlite::State::Row) = query_result.next() {
             let name = query_result.read::<String, _>("name")?;
             let location = query_result.read::<String, _>("location")?;
+            let usage = query_result.read::<String, _>("usage")?;
             if !names.contains(&name) {
                 names.push(name.clone());
                 hops.push((name, location));
