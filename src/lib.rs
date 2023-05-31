@@ -203,9 +203,8 @@ impl Hopper {
     }
 
     fn format_editor<T: AsRef<str>>(&self, editor: T, path: T, move_to: Option<T>) {
-        match move_to {
-            Some(m) => print!("__cd__ {}", m.as_ref()),
-            None => (),
+        if let Some(m) = move_to {
+            print!("__cd__ {}", m.as_ref())
         };
         if editor.as_ref().contains("{}") {
             let imputed = editor.as_ref().replace("{}", path.as_ref());
@@ -228,22 +227,20 @@ impl Hopper {
             Some(name) => {
                 print!("{}", name);
                 Ok(())
-            },
+            }
             None => {
                 let history = self.retrieve_history()?;
                 let associated_pair = history.into_iter().find(|(n, _)| n == &shortcut_name);
-                    match associated_pair {
-                        Some((_, associated_path)) => {
-                            print!("{}", associated_path);
-                            Ok(())
-                        },
-                        None => {
-                            print!(
-                                "[error] Unable to find matching reference."
-                            );
-                            Ok(())
-                        }
+                match associated_pair {
+                    Some((_, associated_path)) => {
+                        print!("{}", associated_path);
+                        Ok(())
                     }
+                    None => {
+                        print!("[error] Unable to find matching reference.");
+                        Ok(())
+                    }
+                }
             }
         }
     }
@@ -276,10 +273,7 @@ impl Hopper {
             None => {
                 let history = self.retrieve_history().unwrap_or_default();
                 let associated_pair = history.into_iter().find(|(n, _)| n == &shortcut_name);
-                match associated_pair {
-                    Some((_, associated_path)) => Some(associated_path),
-                    None => None,
-                }
+                associated_pair.map(|(_, associated_path)| associated_path)
             }
         }
     }
@@ -290,7 +284,11 @@ impl Hopper {
             Self::sanitize(location.as_ref()).unwrap_or(location.as_ref().display().to_string());
         if location_path.is_file() {
             let editor = self.map_editor(&location);
-            let dir = location_path.parent().unwrap_or(Path::new(".")).display().to_string();
+            let dir = location_path
+                .parent()
+                .unwrap_or(Path::new("."))
+                .display()
+                .to_string();
             self.format_editor(editor, location_string, Some(dir));
         } else if location_path.is_dir() {
             print!("__cd__ {}", location_string);
@@ -367,7 +365,9 @@ impl Hopper {
             .prepare("SELECT COUNT(*) AS hist_count FROM history")?;
         if let Ok(sqlite::State::Row) = count_result.next() {
             let count = count_result.read::<i64, _>("hist_count")?;
-            if (count >= self.config.settings.max_history as i64) || (self.config.settings.max_history as i64 == 0) {
+            if (count >= self.config.settings.max_history as i64)
+                || (self.config.settings.max_history as i64 == 0)
+            {
                 let retrieve_query = format!(
                     "SELECT location, name, usage FROM history WHERE name=\"{}\" AND location=\"{}\"",
                     name,
@@ -424,16 +424,38 @@ impl Hopper {
         let filter_condition = filter_string.unwrap_or("".to_string());
         let filtered_hops: Vec<(String, String, String)> = hops
             .into_iter()
-            .map(|(n, l)| (n, if PathBuf::from(&l).is_file() { "file".to_string() } else { "dir".to_string() }, l))
-            .filter(|(n, t, l)| n.contains(&filter_condition) || l.contains(&filter_condition) || t.contains(&filter_condition))
+            .map(|(n, l)| {
+                (
+                    n,
+                    if PathBuf::from(&l).is_file() {
+                        "file".to_string()
+                    } else {
+                        "dir".to_string()
+                    },
+                    l,
+                )
+            })
+            .filter(|(n, t, l)| {
+                n.contains(&filter_condition)
+                    || l.contains(&filter_condition)
+                    || t.contains(&filter_condition)
+            })
             .collect();
         let max_name_size = filtered_hops
             .iter()
             .map(|(name, _, _)| name.len())
             .max()
             .unwrap_or(0);
-        let first_col = self.config.settings.print_color_primary.unwrap_or([51, 255, 255]);
-        let sec_col = self.config.settings.print_color_secondary.unwrap_or([51, 255, 153]);
+        let first_col = self
+            .config
+            .settings
+            .print_color_primary
+            .unwrap_or([51, 255, 255]);
+        let sec_col = self
+            .config
+            .settings
+            .print_color_secondary
+            .unwrap_or([51, 255, 153]);
         let mut formatted_hops: Vec<String> = filtered_hops
             .into_iter()
             .map(|(name, type_loc, location)| {
@@ -550,11 +572,15 @@ impl Hopper {
                     print!("__cmd__ {}", self.config.settings.default_editor);
                 } else if hop_loc.is_file() {
                     self.log_history(&hop_loc, shortcut_name)?;
-                    let dir = hop_loc.parent().unwrap_or(Path::new(".")).display().to_string();
+                    let dir = hop_loc
+                        .parent()
+                        .unwrap_or(Path::new("."))
+                        .display()
+                        .to_string();
                     self.format_editor(
                         self.map_editor(&hop_loc),
                         hop_loc.as_path().display().to_string(),
-                        Some(dir)
+                        Some(dir),
                     );
                 }
             }
@@ -564,8 +590,13 @@ impl Hopper {
                         self.log_history(&dir, short)?;
                         if dir.is_file() {
                             let editor = self.map_editor(&dir);
-                            let file_dir = dir.parent().unwrap_or(Path::new(".")).display().to_string();
-                            self.format_editor(editor, dir.as_path().display().to_string(), Some(file_dir));
+                            let file_dir =
+                                dir.parent().unwrap_or(Path::new(".")).display().to_string();
+                            self.format_editor(
+                                editor,
+                                dir.as_path().display().to_string(),
+                                Some(file_dir),
+                            );
                         };
                     }
                     None => {
@@ -584,7 +615,7 @@ impl Hopper {
     }
 
     fn retrieve_history(&self) -> anyhow::Result<Vec<(String, String)>> {
-        let query = "SELECT name, location, usage
+        let query = "SELECT name, location
             FROM history
             ORDER by usage DESC";
         let mut query_result = self.db.prepare(query)?;
@@ -593,7 +624,6 @@ impl Hopper {
         while let Ok(sqlite::State::Row) = query_result.next() {
             let name = query_result.read::<String, _>("name")?;
             let location = query_result.read::<String, _>("location")?;
-            let usage = query_result.read::<String, _>("usage")?;
             if !names.contains(&name) {
                 names.push(name.clone());
                 hops.push((name, location));
