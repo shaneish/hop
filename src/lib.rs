@@ -61,7 +61,7 @@ impl Env {
         if !Path::new(&database_file).exists() {
             match fs::create_dir_all(&database_file) {
                 Ok(_) => {}
-                Err(e) => println!("[error] Error creating database directory: {}", e),
+                Err(e) => print!("[error] Error creating database directory: {}", e),
             };
         };
         match var("HOP_DATABASE_FILE_NAME") {
@@ -134,7 +134,7 @@ impl Hopper {
             name, &path_as_string
         );
         self.db.execute(query)?;
-        println!("[info] Added shortcut: {} -> {}", name, path_as_string);
+        print!("[info] Added shortcut: {} -> {}", name, path_as_string);
         Ok(())
     }
 
@@ -171,13 +171,13 @@ impl Hopper {
         if !is_passthrough {
             match statement_check {
                 Some((statement, name)) => match statement {
-                    Ok(_) => println!("[info] Removed shortcut: {}", name),
-                    Err(e) => println!(
+                    Ok(_) => print!("[info] Removed shortcut: {}", name),
+                    Err(e) => print!(
                         "[error] Failed to remove shortcut: {} with error {}",
                         name, e
                     ),
                 },
-                None => println!("[error] Unable to find shortcut to remove."),
+                None => print!("[error] Unable to find shortcut to remove."),
             };
         };
         Ok(())
@@ -204,23 +204,48 @@ impl Hopper {
 
     fn format_editor<T: AsRef<str>>(&self, editor: T, path: T, move_to: Option<T>) {
         match move_to {
-            Some(m) => println!("__cd__ {}", m.as_ref()),
+            Some(m) => print!("__cd__ {}", m.as_ref()),
             None => (),
         };
         if editor.as_ref().contains("{}") {
             let imputed = editor.as_ref().replace("{}", path.as_ref());
-            println!("__cmd__ {}", imputed);
+            print!("__cmd__ {}", imputed);
         } else {
-            println!("__cmd__ {} {}", editor.as_ref(), path.as_ref());
+            print!("__cmd__ {} {}", editor.as_ref(), path.as_ref());
         }
     }
 
     fn print_hop(&self, shortcut_name: String) -> anyhow::Result<()> {
         match self.find_hop(shortcut_name) {
-            Some(name) => println!("{}", name),
-            None => println!("[error] Unable to find shortcut."),
+            Some(name) => print!("{}", name),
+            None => print!("[error] Unable to find shortcut."),
         }
         Ok(())
+    }
+
+    fn grab(&self, shortcut_name: String) -> anyhow::Result<()> {
+        match self.find_hop(shortcut_name.clone()) {
+            Some(name) => {
+                print!("{}", name);
+                Ok(())
+            },
+            None => {
+                let history = self.retrieve_history()?;
+                let associated_pair = history.into_iter().find(|(n, _)| n == &shortcut_name);
+                    match associated_pair {
+                        Some((_, associated_path)) => {
+                            print!("{}", associated_path);
+                            Ok(())
+                        },
+                        None => {
+                            print!(
+                                "[error] Unable to find matching reference."
+                            );
+                            Ok(())
+                        }
+                    }
+            }
+        }
     }
 
     fn find_hop(&self, shortcut_name: String) -> Option<String> {
@@ -245,6 +270,20 @@ impl Hopper {
         }
     }
 
+    fn find_any(&self, shortcut_name: String) -> Option<String> {
+        match self.find_hop(shortcut_name.clone()) {
+            Some(name) => Some(name),
+            None => {
+                let history = self.retrieve_history().unwrap_or_default();
+                let associated_pair = history.into_iter().find(|(n, _)| n == &shortcut_name);
+                match associated_pair {
+                    Some((_, associated_path)) => Some(associated_path),
+                    None => None,
+                }
+            }
+        }
+    }
+
     fn output_ambiguous<T: AsRef<Path>>(&self, location: T) {
         let location_path = location.as_ref();
         let location_string =
@@ -254,7 +293,7 @@ impl Hopper {
             let dir = location_path.parent().unwrap_or(Path::new(".")).display().to_string();
             self.format_editor(editor, location_string, Some(dir));
         } else if location_path.is_dir() {
-            println!("__cd__ {}", location_string);
+            print!("__cd__ {}", location_string);
         };
     }
 
@@ -296,7 +335,7 @@ impl Hopper {
         if let Rabbit::Dir(hop_name, hop_path) = bunny {
             self.log_history(hop_path, hop_name)?;
         };
-        println!("__cmd__ {}", self.config.settings.default_editor);
+        print!("__cmd__ {}", self.config.settings.default_editor);
         Ok(())
     }
 
@@ -502,13 +541,13 @@ impl Hopper {
     }
 
     fn hop_to_and_open_dir(&mut self, shortcut_name: String) -> anyhow::Result<()> {
-        let hop_loc_string = self.find_hop(shortcut_name.clone());
+        let hop_loc_string = self.find_any(shortcut_name.clone());
         match hop_loc_string {
             Some(loc) => {
                 let hop_loc = PathBuf::from(&loc);
                 if hop_loc.is_dir() {
                     self.use_hop(shortcut_name)?;
-                    println!("__cmd__ {}", self.config.settings.default_editor);
+                    print!("__cmd__ {}", self.config.settings.default_editor);
                 } else if hop_loc.is_file() {
                     self.log_history(&hop_loc, shortcut_name)?;
                     let dir = hop_loc.parent().unwrap_or(Path::new(".")).display().to_string();
@@ -530,7 +569,7 @@ impl Hopper {
                         };
                     }
                     None => {
-                        println!("[error] Unable to find referenced file or directory.");
+                        print!("[error] Unable to find referenced file or directory.");
                     }
                 };
             }
@@ -570,11 +609,11 @@ impl Hopper {
                 let associated_pair = history.into_iter().find(|(n, _)| n == &name);
                 match associated_pair {
                     Some((_, associated_path)) => {
-                        println!("{}", associated_path);
+                        print!("{}", associated_path);
                         Ok(())
                     }
                     None => {
-                        println!(
+                        print!(
                             "[error] Unable to find matching reference in current history mapping."
                         );
                         Ok(())
@@ -585,7 +624,7 @@ impl Hopper {
                 let associated_pair = history.into_iter().find(|(_, p)| loc == PathBuf::from(&p));
                 match associated_pair {
                     Some((associated_name, _)) => {
-                        println!("{}", associated_name);
+                        print!("{}", associated_name);
                         Ok(())
                     }
                     None => self
@@ -593,7 +632,7 @@ impl Hopper {
                 }
             }
             _ => {
-                println!("[error] Unable to find matching reference in current history mapping.");
+                print!("[error] Unable to find matching reference in current history mapping.");
                 Ok(())
             }
         }

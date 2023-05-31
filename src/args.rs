@@ -69,6 +69,7 @@ pub enum Cmd {
     ShowHistory,
     PullHistory(Rabbit),
     Search(Option<String>),
+    Grab(String),
 }
 
 impl Cmd {
@@ -77,7 +78,7 @@ impl Cmd {
             env::current_dir().expect("[error] Unable to locate current working directory.");
         match env::args().nth(1) {
             Some(primary) => match primary.as_str() {
-                "add" => match env::args().nth(2) {
+                "a" | "ad" | "add" => match env::args().nth(2) {
                     Some(f_or_d) => {
                         let mut f_or_d_path = PathBuf::from(&current_dir);
                         f_or_d_path.push(&f_or_d);
@@ -93,16 +94,16 @@ impl Cmd {
                         None,
                     )),
                 },
-                "rm" | "remove" => match env::args().nth(2) {
+                "r" | "rm" | "remove" => match env::args().nth(2) {
                     Some(name) => Cmd::Remove(Rabbit::request(name)),
                     None => Cmd::Remove(Rabbit::request(current_dir.display().to_string())),
                 },
-                "ls" | "list" => match env::args().nth(2) {
+                "l" | "ls" | "list" => match env::args().nth(2) {
                     Some(name) => Cmd::LocateShortcut(name),
                     None => Cmd::Passthrough("_ls".to_string()),
                 },
                 "_ls" => Cmd::ListHops,
-                "version" | "v" => Cmd::Passthrough("_version".to_string()),
+                "v" | "vs" | "version" => Cmd::Passthrough("_version".to_string()),
                 "_version" => Cmd::PrintMsg(format!(
                     "{} 🐇 {}{}",
                     "BunnyHop".cyan().bold(),
@@ -113,14 +114,18 @@ impl Cmd {
                 "back" => Cmd::BrbHop,
                 "help" => Cmd::Passthrough("_help".to_string()),
                 "_help" => Cmd::PrintHelp,
-                "config" | "configure" => Cmd::Configure,
-                "edit" => match env::args().nth(2) {
+                "c" | "cf" | "config" | "configure" => Cmd::Configure,
+                "e" | "ed" | "edit" => match env::args().nth(2) {
                     Some(name) => Cmd::HopDirAndEdit(name),
                     None => Cmd::EditDir(Rabbit::from(current_dir, None)),
                 },
-                "locate" => Cmd::Passthrough("_locate_bunnyhop_resources".to_string()),
+                "g" | "gb" | "grab" => match env::args().nth(2) {
+                    Some(shortcut) => Cmd::Grab(shortcut),
+                    None => Cmd::PrintMsg("[error] No shortcut provided.".to_string()),
+                },
+                "loc" | "locate" => Cmd::Passthrough("_locate_bunnyhop_resources".to_string()),
                 "_locate_bunnyhop_resources" => Cmd::LocateBunnyhop,
-                "history" | "hist" => match env::args().nth(2) {
+                "h" | "hs" | "history" | "hist" => match env::args().nth(2) {
                     Some(arg) => Cmd::Passthrough(format!("_history {}", arg)),
                     None => Cmd::Passthrough("_history".to_string()),
                 },
@@ -128,7 +133,7 @@ impl Cmd {
                     Some(name) => Cmd::PullHistory(Rabbit::request(name)),
                     None => Cmd::ShowHistory,
                 },
-                "search" => match env::args().nth(2) {
+                "s" | "sr" | "search" => match env::args().nth(2) {
                     Some(term) => Cmd::Passthrough(format!("_search {}", term)),
                     None => Cmd::Passthrough("_search".to_string()),
                 },
@@ -158,6 +163,7 @@ impl Hopper {
             Cmd::ShowHistory => self.show_history(None),
             Cmd::PullHistory(bunny) => self.search_history(bunny),
             Cmd::Search(filter_condition) => self.search_all(filter_condition),
+            Cmd::Grab(shortcut) => self.grab(shortcut),
             Cmd::PrintMsg(msg) => {
                 println!("{}", msg);
                 Ok(())
