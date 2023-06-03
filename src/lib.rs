@@ -26,6 +26,7 @@ pub struct Settings {
     pub ls_display_block: usize,
     pub print_color_primary: Option<[u8; 3]>,
     pub print_color_secondary: Option<[u8; 3]>,
+    pub verbose: Option<bool>,
 }
 
 #[derive(Debug)]
@@ -46,7 +47,7 @@ impl Env {
             }
         };
         let mut config_file = PathBuf::from(&config_dir);
-        match var("config_file_NAME") {
+        match var("HOP_CONFIG_FILE_NAME") {
             Ok(name) => config_file.push(name),
             Err(_) => config_file.push("bunnyhop.toml"),
         };
@@ -127,6 +128,12 @@ impl Hopper {
         })
     }
 
+    fn info(&self, msg: &str) {
+        if self.config.settings.verbose.unwrap_or(false) {
+            println!("[info] {}", msg);
+        }
+    }
+
     fn add_hop<T: AsRef<Path>>(&mut self, path: T, name: &str) -> anyhow::Result<()> {
         let path_as_string = Self::sanitize(path.as_ref())?;
         let query = format!(
@@ -134,7 +141,7 @@ impl Hopper {
             name, &path_as_string
         );
         self.db.execute(query)?;
-        print!("[info] Added shortcut: {} -> {}", name, path_as_string);
+        self.info(format!("Added shortcut: {} -> {}", name, path_as_string).as_str());
         Ok(())
     }
 
@@ -171,7 +178,7 @@ impl Hopper {
         if !is_passthrough {
             match statement_check {
                 Some((statement, name)) => match statement {
-                    Ok(_) => print!("[info] Removed shortcut: {}", name),
+                    Ok(_) => self.info(format!("Removed shortcut: {}", name).as_str()),
                     Err(e) => print!(
                         "[error] Failed to remove shortcut: {} with error {}",
                         name, e
@@ -204,7 +211,12 @@ impl Hopper {
 
     fn format_editor<T: AsRef<str>>(&self, editor: T, path: T, move_to: Option<T>) {
         if let Some(m) = move_to {
-            print!("__cd__ {}", m.as_ref())
+            let loc = if !m.as_ref().is_empty() {
+                m.as_ref()
+            } else {
+                "."
+            };
+            print!("__cd__ {}", loc)
         };
         if editor.as_ref().contains("{}") {
             let imputed = editor.as_ref().replace("{}", path.as_ref());
@@ -342,6 +354,16 @@ impl Hopper {
             Rabbit::File(hop_name, hop_path) => self.add_hop(hop_path, &hop_name),
             Rabbit::Dir(hop_name, hop_path) => self.add_hop(hop_path, &hop_name),
             Rabbit::RequestName(shortcut_name) => self.use_hop(shortcut_name),
+            _ => Ok(()),
+        }
+    }
+
+    fn add_and_just_do_it(&mut self, bunny: Rabbit) -> anyhow::Result<()> {
+        match bunny {
+            Rabbit::File(hop_name, hop_path) | Rabbit::Dir(hop_name, hop_path) => {
+                self.add_hop(hop_path, &hop_name)?;
+                self.use_hop(hop_name)
+            },
             _ => Ok(()),
         }
     }
