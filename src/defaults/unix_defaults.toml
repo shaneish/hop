@@ -8,7 +8,7 @@ default_editor="vi"
 #
 # If set to 0, will continue to history indefinitely
 # without removing.
-max_history=300
+max_history=0
 
 # Use this choose how to display the results of the `ls`
 # or `list` command.
