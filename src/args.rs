@@ -140,12 +140,9 @@ impl Cmd {
                 },
                 "_search" => Cmd::Search(env::args().nth(2)),
                 whatevs => match env::args().nth(2) {
-                    Some(shortcut) => Cmd::AddAndUse(Rabbit::from(
-                        whatevs,
-                        Some(shortcut),
-                    )),
+                    Some(shortcut) => Cmd::AddAndUse(Rabbit::from(whatevs, Some(shortcut))),
                     None => Cmd::Use(Rabbit::RequestName(whatevs.to_string())),
-                }
+                },
             },
             None => Cmd::PrintMsg("[error] Unable to parse current arguments.".to_string()),
         }

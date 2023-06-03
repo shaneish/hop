@@ -101,9 +101,9 @@ impl Shell {
         // respective shells.  Any new shells added will need an appropriate runner implementation
         // added.
         match self {
-            Shell::Nushell => include_str!("runner.nu"),
-            Shell::Powershell => include_str!("runner.ps1"),
-            _ => include_str!("runner.sh"),
+            Shell::Nushell => include_str!("runners/runner.nu"),
+            Shell::Powershell => include_str!("runners/runner.ps1"),
+            _ => include_str!("runners/runner.sh"),
         }
     }
 

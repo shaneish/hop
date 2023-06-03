@@ -1,81 +1,7 @@
 pub mod args;
+pub mod configs;
 use args::Rabbit;
 use colored::Colorize;
-use dirs::home_dir;
-use proceed::any_or_quit_with;
-use serde_derive::Deserialize;
-use std::{
-    collections::HashMap,
-    env::{consts, current_exe, var},
-    fs, include_str,
-    io::Write,
-    path::{Path, PathBuf},
-};
-use toml::from_str;
-
-#[derive(Deserialize, PartialEq, Debug)]
-pub struct Config {
-    pub settings: Settings,
-    pub editors: Option<HashMap<String, String>>,
-}
-
-#[derive(Deserialize, PartialEq, Debug)]
-pub struct Settings {
-    pub default_editor: String,
-    pub max_history: usize,
-    pub ls_display_block: usize,
-    pub print_color_primary: Option<[u8; 3]>,
-    pub print_color_secondary: Option<[u8; 3]>,
-    pub verbose: Option<bool>,
-}
-
-#[derive(Debug)]
-pub struct Env {
-    pub config_file: PathBuf,
-    pub database_file: PathBuf,
-}
-
-impl Env {
-    fn read() -> Self {
-        let mut home_dir = home_dir().unwrap_or(PathBuf::from("~/"));
-        let config_dir = match var("HOP_CONFIG_DIRECTORY") {
-            Ok(loc) => PathBuf::from(&loc),
-            Err(_) => {
-                home_dir.push(".config");
-                home_dir.push("bunnyhop");
-                home_dir
-            }
-        };
-        let mut config_file = PathBuf::from(&config_dir);
-        match var("HOP_CONFIG_FILE_NAME") {
-            Ok(name) => config_file.push(name),
-            Err(_) => config_file.push("bunnyhop.toml"),
-        };
-        let mut database_file = match var("HOP_DATABASE_DIRECTORY") {
-            Ok(loc) => PathBuf::from(&loc),
-            Err(_) => {
-                let mut db_dir_temp = PathBuf::from(format!("{}", &config_dir.as_path().display()));
-                db_dir_temp.push("db");
-                db_dir_temp
-            }
-        };
-        if !Path::new(&database_file).exists() {
-            match fs::create_dir_all(&database_file) {
-                Ok(_) => {}
-                Err(e) => print!("[error] Error creating database directory: {}", e),
-            };
-        };
-        match var("HOP_DATABASE_FILE_NAME") {
-            Ok(name) => database_file.push(name),
-            Err(_) => database_file.push("bunnyhop.db"),
-        };
-
-        Env {
-            config_file,
-            database_file,
-        }
-    }
-}
 
 pub struct Hopper {
     pub config: Config,
@@ -363,7 +289,7 @@ impl Hopper {
             Rabbit::File(hop_name, hop_path) | Rabbit::Dir(hop_name, hop_path) => {
                 self.add_hop(hop_path, &hop_name)?;
                 self.use_hop(hop_name)
-            },
+            }
             _ => Ok(()),
         }
     }

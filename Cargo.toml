@@ -30,6 +30,8 @@ proceed = "0.1.0"
 dos2unix = "0.1.0"
 dirs = "4.0.0"
 anyhow = "1.0"
+sqlite = "0.30.4"
+anyhow = "1.0"
 
 [[bin]]
 name = "bhop"
