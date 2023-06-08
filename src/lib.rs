@@ -4,52 +4,17 @@ use args::Rabbit;
 use colored::Colorize;
 
 pub struct Hopper {
-    pub config: Config,
-    pub env: Env,
+    pub config: configs::Config,
     pub db: sqlite::Connection,
 }
 
 impl Hopper {
     pub fn new() -> anyhow::Result<Self> {
-        let env = Env::read();
-        if !env.config_file.exists() {
-            fs::create_dir_all(
-                env.config_file
-                    .parent()
-                    .expect("[error] Unable to create config directory."),
-            )
-            .expect("[error] Unable to create config directory.");
-            let mut new_conf =
-                fs::File::create(&env.config_file).expect("[error] Unable to create config file.");
-            let default_configs: &str = match consts::OS {
-                "windows" => include_str!("defaults/windows_defaults.toml"),
-                _ => include_str!("defaults/unix_defaults.toml"),
-            };
-            new_conf
-                .write_all(default_configs.as_bytes())
-                .expect("[error] Unable to generate default config file.");
-        };
-        let toml_str: String = fs::read_to_string(env.config_file.clone())
-            .expect("[error] Unable to read config file location.");
-        let configs: Config =
-            from_str(&toml_str).expect("[error] Unable to parse configuration TOML.");
+        let env = configs::Environment::new();
+        let config = configs::Config::new(&env.config_file)?;
         let conn = sqlite::open(&env.database_file)?;
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS named_hops (
-            name TEXT PRIMARY KEY,
-            location TEXT NOT NULL
-            )",
-        )?;
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS history (
-            name TEXT NOT NULL,
-            location TEXT NOT NULL,
-            usage INTEGER NOT NULL
-            )",
-        )?;
         Ok(Hopper {
             config: configs,
-            env,
             db: conn,
         })
     }

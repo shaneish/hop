@@ -18,14 +18,14 @@ impl Environment {
         let config_dir = match var("HOP_CONFIG_DIRECTORY") {
             Ok(loc) => PathBuf::from(&loc),
             Err(_) => {
-                let config_dir_temp = home_dir.clone();
+                let mut config_dir_temp = home_dir.clone();
                 config_dir_temp.push(".config");
                 config_dir_temp.push("bhop");
                 config_dir_temp
             }
         };
         let config_path = config_dir.clone().join("bhop.toml");
-        let mut script_dir = match var("HOP_SCRIPT_DIRECTORY") {
+        let script_dir = match var("HOP_SCRIPT_DIRECTORY") {
             Ok(loc) => PathBuf::from(&loc),
             Err(_) => {
                 let mut script_dir_temp =
@@ -34,7 +34,7 @@ impl Environment {
                 script_dir_temp
             }
         };
-        let mut db_path = match var("HOP_DATABASE_DIRECTORY") {
+        let db_path = match var("HOP_DATABASE_DIRECTORY") {
             Ok(loc) => PathBuf::from(&loc),
             Err(_) => {
                 let mut db_dir_temp = PathBuf::from(format!("{}", &config_dir.as_path().display()));
@@ -110,10 +110,11 @@ pub struct Configs {
 impl Configs {
     pub fn new(environment: Environment) -> Self {
         let read_config = ReadConfig::new(environment.clone());
-        let default_editor = match read_config.settings.unwrap().default_editor {
+        let settings = read_config.settings.unwrap();
+        let default_editor = match settings.default_editor {
             Some(editor) => editor,
             None => match var("EDITOR") {
-                Ok(editor) => editor,
+                Ok(sys_editor) => sys_editor,
                 Err(_) => {
                     if cfg!(target_os = "windows") {
                         String::from("notepad")
@@ -123,30 +124,12 @@ impl Configs {
                 }
             },
         };
-        let max_history = match read_config.settings.unwrap().max_history {
-            Some(history) => history,
-            None => 0,
-        };
-        let ls_display_block = match read_config.settings.unwrap().ls_display_block {
-            Some(block) => block,
-            None => 0,
-        };
-        let print_color_primary = match read_config.settings.unwrap().print_color_primary {
-            Some(color) => color,
-            None => [51, 255, 255],
-        };
-        let print_color_secondary = match read_config.settings.unwrap().print_color_secondary {
-            Some(color) => color,
-            None => [51, 255, 153],
-        };
-        let verbose = match read_config.settings.unwrap().verbose {
-            Some(verbose) => verbose,
-            None => false,
-        };
-        let editors = match read_config.editors {
-            Some(editors) => editors,
-            None => HashMap::new(),
-        };
+        let max_history = settings.max_history.unwrap_or(0);
+        let ls_display_block = settings.ls_display_block.unwrap_or(0);
+        let print_color_primary = settings.print_color_primary.unwrap_or([51, 255, 255]);
+        let print_color_secondary = settings.print_color_secondary.unwrap_or([51, 255, 153]);
+        let verbose = settings.verbose.unwrap_or(false);
+        let editors = read_config.editors.unwrap_or(HashMap::new());
         Configs {
             default_editor,
             max_history,
