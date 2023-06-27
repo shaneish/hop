@@ -1,5 +1,5 @@
-extern crate sqlite;
 extern crate anyhow;
+extern crate sqlite;
 
 use std::{fs, io, path::Path};
 #[path = "src/add_runners.rs"]
@@ -71,21 +71,6 @@ fn main() {
     {
         println!("cargo:rerun-if-env-changed={}", env_var);
     }
-
-    // Move runner scripts to script config directory
-    copy_dir_all("src/runners", &env.script_dir)
-        .expect("Failed to copy runner scripts to script directory");
-
-    // Add default hop.toml to config directory
-    let default_toml = if cfg!(windows) {
-        "src/defaults/windows_defaults.toml"
-    } else {
-        "src/defaults/unix_defaults.toml"
-    };
-    fs::copy(default_toml, &env.config_path).expect("Failed to copy hop.toml to config directory");
-
-    // Create database if it doesn't exist
-    create_database(&env.db_path).expect("Failed to create database");
 
     // Any new shells added in the future must be added in the following vector to be properly
     // configured with their respective runner script when `Bunnyhop` is built.

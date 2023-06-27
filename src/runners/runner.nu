@@ -1,4 +1,4 @@
-def-env __bunnyhop__ [cmd: string, p2: string = "", p3: string = ""] {
+def-env __bhop__ [cmd: string, p2: string = "", p3: string = ""] {
     let command = (__SHELL_CALLABLE__ -c ($"__HOPPERCMD__ ($cmd) ($p2) ($p3)" | str trim))
     let new_loc = if ($command | str starts-with '__cd__') {
         ($command | split row "__cmd__ " | first | parse "__cd__ {dir}" | get dir | first)
@@ -17,4 +17,4 @@ def-env __bunnyhop__ [cmd: string, p2: string = "", p3: string = ""] {
     }
 }
 
-alias hp = __bunnyhop__
+alias hp = __bhop__
