@@ -1,0 +1,2 @@
+[env]
+BHOP_CMD_SEPARATOR = "|"

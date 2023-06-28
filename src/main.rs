@@ -1,5 +1,5 @@
 fn main() {
-    let command = bhop::args::Cmd::parse();
+    let command = bhop::args::Request::parse();
     let hopper = bhop::Hopper::new();
     match hopper {
         Ok(mut hopper) => match hopper.execute(command) {

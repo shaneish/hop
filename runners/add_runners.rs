@@ -54,7 +54,7 @@ impl Shell {
             Shell::Zsh => "zsh",
             Shell::Bash => "sh",
             Shell::Nushell => "nu",
-            Shell::Powershell => "powershell",
+            Shell::Powershell => "pwsh",
         }
     }
 
@@ -80,10 +80,10 @@ impl Shell {
         // This method returns the environment variable that can be set to specify a non-standard
         // shell configuration file location.
         match self {
-            Shell::Zsh => "BUNNYHOP_ZSH_CONFIG_DIR",
-            Shell::Bash => "BUNNYHOP_BASH_CONFIG_DIR",
-            Shell::Nushell => "BUNNYHOP_NUSHELL_CONFIG_DIR",
-            Shell::Powershell => "BUNNYHOP_POWERSHELL_CONFIG_DIR",
+            Shell::Zsh => "BHOP_ZSH_CONFIG_DIR",
+            Shell::Bash => "BHOP_BASH_CONFIG_DIR",
+            Shell::Nushell => "BHOP_NUSHELL_CONFIG_DIR",
+            Shell::Powershell => "BHOP_POWERSHELL_CONFIG_DIR",
         }
     }
 
@@ -101,9 +101,9 @@ impl Shell {
         // respective shells.  Any new shells added will need an appropriate runner implementation
         // added.
         match self {
-            Shell::Nushell => include_str!("runner.nu"),
-            Shell::Powershell => include_str!("runner.ps1"),
-            _ => include_str!("runner.sh"),
+            Shell::Nushell => include_str!("scripts/runner.nu"),
+            Shell::Powershell => include_str!("scripts/runner.ps1"),
+            _ => include_str!("scripts/runner.sh"),
         }
     }
 
@@ -253,15 +253,20 @@ impl Shell {
 pub struct Runners {
     alias: String,
     shells: Vec<Shell>,
+    script_dir: PathBuf,
 }
 
 impl Runners {
-    pub fn new(shells: Vec<Shell>) -> Self {
-        let alias = match var("BUNNYHOP_SHELL_ALIAS") {
+    pub fn new(shells: Vec<Shell>, script_dir: PathBuf) -> Self {
+        let alias = match var("BHOP_SHELL_ALIAS") {
             Ok(n) => n,
             Err(_) => "hp".to_string(),
         };
-        Runners { alias, shells }
+        Runners {
+            alias,
+            shells,
+            script_dir,
+        }
     }
 
     pub fn add_runners(&self) {
@@ -285,16 +290,13 @@ impl Runners {
         match shell.derive_config_path() {
             Some(config_path) => {
                 println!("[info] Located config file: {}", &config_path.display());
-                let config_file_path = config_path
-                    .parent()
-                    .expect("Failed to get parent directory of config file.")
-                    .join(format!(".bunnyhop.{}.{}", shell.call_cmd(), shell.ext()));
+                let script_file_path = self.script_dir.join(format!("runner.{}", shell.ext()));
                 {
-                    let mut hop_conf_file = OpenOptions::new()
+                    let mut hop_script_file = OpenOptions::new()
                         .write(true)
                         .create(true)
                         .truncate(true)
-                        .open(&config_file_path)?;
+                        .open(&script_file_path)?;
                     let mut conf_file = OpenOptions::new()
                         .append(true)
                         .read(true)
@@ -304,22 +306,23 @@ impl Runners {
                     let source_cmd = format!(
                         "{} \"{}\"",
                         shell.source_cmd(),
-                        &config_file_path.as_path().display()
+                        &script_file_path.as_path().display()
                     )
                     .replace('\\', "/");
                     let script = shell
                         .script()
                         .replace("__HOPPERCMD__", exe_name)
                         .replace("__SHELL_CALLABLE__", shell.call_cmd())
-                        .replace("__FUNCTION_ALIAS__", &self.alias);
-                    hop_conf_file.write_all(script.as_bytes())?;
+                        .replace("__FUNCTION_ALIAS__", &self.alias)
+                        .replace("__CMD_SEPARATOR__", env!("BHOP_CMD_SEPARATOR"));
+                    hop_script_file.write_all(script.as_bytes())?;
                     let config_file_contents = read_to_string(config_path)?;
                     if !config_file_contents.contains(&source_cmd) {
                         conf_file.write_all(format!("\n{}", source_cmd).as_bytes())?;
                     }
                 }
                 if !cfg!(windows) {
-                    dos2unix::Dos2Unix::convert(&config_file_path.display().to_string(), true);
+                    dos2unix::Dos2Unix::convert(&script_file_path.display().to_string(), true);
                 }
                 Ok(())
             }

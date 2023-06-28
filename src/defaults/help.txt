@@ -1,33 +1,27 @@
-"
-{} {} {}
-    1) First argument is required.
-    2) Second argument is optional.
+Terminal shortcuts for hopping around your filesystem.
 
-Valid first argument commands are:
-    1) {}: command to add a shortcut to the current directory.
-        If a second argument is given, that argument is the name that will
-        be used to refer to the shortcut for future use.
-        If no second argument is given, the high level name will be used.
-    2) {} or {}: command to list the current shortcuts and their names.
-    3) {} or {}: both commands to show current hop version info.
-    4) {}: command to create a temporary shortcut to the current directory
-        that can be jumped back to using the {} {} command.
-    5) {} or {}: command to remove the shortcut specified by {} or remove
-        shortcut to current directory if no second argument specified.
-    6) {}: open a file or directory within your editor of choice.
-    7) {} or {}: open your bunnyhop configuration file.
-    8) {}: show all relevant installation directories if no second argument
-        is given.
-    9) {} or {}: show all available shortcuts currently saved in history.  If second argument
-        is given, finds associated value in history.  If second argument is a valid
-        path, shows the shortcut name for that path (if it exists).  If second
-        argument is a shortcut name, shows the most commonly used path for that
-        shortcut name (if it exists).
-    10) {}: search saved shortcuts and active history for names and locations that contain the
-        substring given by {}.  If not substring specified, will print all saved shortcuts and
-        active history.
-    11) {}: Any other first arguments given will be checked to see if it
-        represents a valid directory/file to hop to.  This input can be a named
-        shortcut, a file/directory in the current directory, or a file/directory
-        from previous {} commands.
-"
+Usage: hp [COMMAND] [*TARGET] [*EXTRA]
+
+Commands:
+    add, a [*TARGET] [*EXTRA]: add a shortcut to the current directory with name TARGET.  If
+        a second argument is given, that argument is the path that the shortcut will point to.
+
+    list, ls, l [*TARGET]: list all shortcuts.  if TARGET given, list all shortcuts
+        that glob match TARGET in their name or location.
+
+    remove, rm, r [TARGET]: remove the shortcut with name TARGET.
+
+    grab, g [TARGET]: grab the path of the shortcut with name TARGET.
+
+    locate, loc: return the bhop configuration folder.
+
+    version, v: return the current version of bhop.
+
+    help, h: print this help message.
+
+    edit, e [TARGET] [*EXTRA]: open the TARGET in your editor of choice.  If EXTRA given, open
+        the EXTRA group in your editor of choice.
+
+    brb: mark the current directory for later return.
+
+    back: return to the last directory marked with brb.
