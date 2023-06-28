@@ -18,8 +18,6 @@ fn sanitize<T: AsRef<Path>>(p: T) -> anyhow::Result<String> {
     Ok(location.replace('\\', "/").replace("//?/", ""))
 }
 
-static CMD_SEPERATOR: &str = "|";
-
 pub struct Hopper {
     pub config: configs::Configs,
     pub db: sqlite::Connection,
@@ -58,7 +56,7 @@ impl Hopper {
         let cmd = format!(
             "{}{}{}",
             move_dir,
-            CMD_SEPERATOR,
+            env!("BHOP_CMD_SEPARATOR"),
             self.map_editor(config_path)?
         );
         Ok(cmd)
@@ -66,7 +64,7 @@ impl Hopper {
 
     fn passthrough(&self, cmd: String) -> anyhow::Result<String> {
         let bhop_exe = sanitize(std::env::current_exe()?)?;
-        Ok(format!(".{}{} {}", CMD_SEPERATOR, bhop_exe, cmd))
+        Ok(format!(".{}{} {}", env!("BHOP_CMD_SEPARATOR"), bhop_exe, cmd))
     }
 
     fn map_editor<T: AsRef<Path>>(&self, f: T) -> anyhow::Result<String> {
@@ -217,7 +215,7 @@ impl Hopper {
                     } else {
                         ".".to_string()
                     };
-                    let cmd = format!("{}{}{}", move_dir, CMD_SEPERATOR, self.map_editor(path)?);
+                    let cmd = format!("{}{}{}", move_dir, env!("BHOP_CMD_SEPARATOR"), self.map_editor(path)?);
                     Ok(cmd)
                 }
             }

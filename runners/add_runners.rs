@@ -54,7 +54,7 @@ impl Shell {
             Shell::Zsh => "zsh",
             Shell::Bash => "sh",
             Shell::Nushell => "nu",
-            Shell::Powershell => "powershell",
+            Shell::Powershell => "pwsh",
         }
     }
 
@@ -80,10 +80,10 @@ impl Shell {
         // This method returns the environment variable that can be set to specify a non-standard
         // shell configuration file location.
         match self {
-            Shell::Zsh => "BUNNYHOP_ZSH_CONFIG_DIR",
-            Shell::Bash => "BUNNYHOP_BASH_CONFIG_DIR",
-            Shell::Nushell => "BUNNYHOP_NUSHELL_CONFIG_DIR",
-            Shell::Powershell => "BUNNYHOP_POWERSHELL_CONFIG_DIR",
+            Shell::Zsh => "BHOP_ZSH_CONFIG_DIR",
+            Shell::Bash => "BHOP_BASH_CONFIG_DIR",
+            Shell::Nushell => "BHOP_NUSHELL_CONFIG_DIR",
+            Shell::Powershell => "BHOP_POWERSHELL_CONFIG_DIR",
         }
     }
 
@@ -101,9 +101,9 @@ impl Shell {
         // respective shells.  Any new shells added will need an appropriate runner implementation
         // added.
         match self {
-            Shell::Nushell => include_str!("runners/runner.nu"),
-            Shell::Powershell => include_str!("runners/runner.ps1"),
-            _ => include_str!("runners/runner.sh"),
+            Shell::Nushell => include_str!("scripts/runner.nu"),
+            Shell::Powershell => include_str!("scripts/runner.ps1"),
+            _ => include_str!("scripts/runner.sh"),
         }
     }
 
@@ -258,7 +258,7 @@ pub struct Runners {
 
 impl Runners {
     pub fn new(shells: Vec<Shell>, script_dir: PathBuf) -> Self {
-        let alias = match var("BUNNYHOP_SHELL_ALIAS") {
+        let alias = match var("BHOP_SHELL_ALIAS") {
             Ok(n) => n,
             Err(_) => "hp".to_string(),
         };
@@ -313,7 +313,8 @@ impl Runners {
                         .script()
                         .replace("__HOPPERCMD__", exe_name)
                         .replace("__SHELL_CALLABLE__", shell.call_cmd())
-                        .replace("__FUNCTION_ALIAS__", &self.alias);
+                        .replace("__FUNCTION_ALIAS__", &self.alias)
+                        .replace("__CMD_SEPARATOR__", env!("BHOP_CMD_SEPARATOR"));
                     hop_script_file.write_all(script.as_bytes())?;
                     let config_file_contents = read_to_string(config_path)?;
                     if !config_file_contents.contains(&source_cmd) {

@@ -39,3 +39,4 @@ toml = "0.5.10"
 [[bin]]
 name = "bhop"
 path = "src/main.rs"
+

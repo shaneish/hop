@@ -1,7 +1,7 @@
 extern crate anyhow;
 extern crate sqlite;
 
-#[path = "src/add_runners.rs"]
+#[path = "runners/add_runners.rs"]
 mod add_runners;
 use add_runners::{
     Runners,
@@ -31,10 +31,10 @@ fn main() {
         println!("cargo:rerun-if-changed=runners/{}", script);
     }
     for env_var in [
-        "BUNNYHOP_ZSH_CONFIG_DIR",
-        "BUNNYHOP_BASH_CONFIG_DIR",
-        "BUNNYHOP_NUSHELL_CONFIG_DIR",
-        "BUNNYHOP_POWERSHELL_CONFIG_DIR",
+        "BHOP_ZSH_CONFIG_DIR",
+        "BHOP_BASH_CONFIG_DIR",
+        "BHOP_NUSHELL_CONFIG_DIR",
+        "BHOP_POWERSHELL_CONFIG_DIR",
     ]
     .iter()
     {

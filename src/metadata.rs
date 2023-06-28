@@ -10,7 +10,7 @@ pub struct Environment {
 
 impl Environment {
     pub fn new() -> Self {
-        let config_dir = match var("HOP_CONFIG_DIRECTORY") {
+        let config_dir = match var("BHOP_CONFIG_DIRECTORY") {
             Ok(loc) => PathBuf::from(&loc),
             Err(_) => {
                 let mut config_dir_temp = home_dir().unwrap_or(PathBuf::from("~/"));

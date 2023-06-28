@@ -2,10 +2,12 @@ use std::env;
 use tempfile::tempdir;
 use bhop::metadata::Environment;
 use std::path::PathBuf;
+use serial_test::serial;
 
 #[test]
+#[serial]
 fn test_environment_default() {
-    env::remove_var("HOP_CONFIG_DIRECTORY");
+    env::remove_var("BHOP_CONFIG_DIRECTORY");
     let environment = Environment::new();
 
     let mut expected_config_dir = dirs::home_dir().unwrap_or(PathBuf::from("~/"));
@@ -17,9 +19,10 @@ fn test_environment_default() {
 }
 
 #[test]
+#[serial]
 fn test_environment_from_env_var() {
     let temp_dir = tempdir().unwrap();
-    env::set_var("HOP_CONFIG_DIRECTORY", temp_dir.path());
+    env::set_var("BHOP_CONFIG_DIRECTORY", temp_dir.path());
 
     let environment = Environment::new();
     assert_eq!(environment.config_path, temp_dir.path().join("bhop.toml"));
@@ -27,9 +30,10 @@ fn test_environment_from_env_var() {
 }
 
 #[test]
+#[serial]
 fn test_environment_creates_dirs_and_files() {
     let temp_dir = tempdir().unwrap();
-    env::set_var("HOP_CONFIG_DIRECTORY", temp_dir.path());
+    env::set_var("BHOP_CONFIG_DIRECTORY", temp_dir.path());
 
     let _environment = Environment::new();
 
@@ -39,9 +43,10 @@ fn test_environment_creates_dirs_and_files() {
 }
 
 #[test]
+#[serial]
 fn test_environment_creates_database() {
     let temp_dir = tempdir().unwrap();
-    env::set_var("HOP_CONFIG_DIRECTORY", temp_dir.path());
+    env::set_var("BHOP_CONFIG_DIRECTORY", temp_dir.path());
 
     let _environment = Environment::new();
     let conn = sqlite::open(temp_dir.path().join("db").join("bhop.db")).unwrap();
