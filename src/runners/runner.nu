@@ -1,20 +1,8 @@
-def-env __bhop__ [cmd: string, p2: string = "", p3: string = ""] {
-    let command = (__SHELL_CALLABLE__ -c ($"__HOPPERCMD__ ($cmd) ($p2) ($p3)" | str trim))
-    let new_loc = if ($command | str starts-with '__cd__') {
-        ($command | split row "__cmd__ " | first | parse "__cd__ {dir}" | get dir | first)
-    } else if ($command | str starts-with '__cmd__') {
-        __SHELL_CALLABLE__ -c ($command | parse "__cmd__ {first_cmd}" | get first_cmd | first)
-        $env.PWD
-    } else {
-        echo $command
-        $env.PWD
-    }
-    cd $new_loc
-    if ($command | str starts-with '__cd__') {
-        if ($command | str contains '__cmd__') {
-            __SHELL_CALLABLE__ -c ($command | split row "__cmd__ " | last)
-        }
-    }
+def-env __bhop_function__ [cmd: string, a: string = "", b: string = "", c: string = ""] {
+    let command = (__SHELL_CALLABLE__ -c ($"__HOPPERCMD__ ($cmd) ($a) ($b) ($c)" | str trim))
+    echo $command | split column "|" to_move to_exec
+    __SHELL_CALLABLE__ -c $"($to_exec)"
+    cd to_move
 }
 
-alias hp = __bhop__
+alias hp = __bhop_function__

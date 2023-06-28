@@ -40,6 +40,16 @@ ls_display_block=0
 print_color_primary=[51, 255, 255] # cyan
 print_color_secondary=[51, 255, 153] # green
 
+# Choose whether to prioritize moving to local files or saved shortcuts
+prioritize_shortcuts=true
+
+# Always cd into the matching directory when editing
+always_jump=false
+
+# Set prefix and suffix for all search terms
+search_match_prefix="*"
+search_match_suffix="*"
+
 [editors]
 # Use this section to define alternate editors for individual
 # file extensions.  Set the extension on the right and the command

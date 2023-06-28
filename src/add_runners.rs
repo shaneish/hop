@@ -253,15 +253,20 @@ impl Shell {
 pub struct Runners {
     alias: String,
     shells: Vec<Shell>,
+    script_dir: PathBuf,
 }
 
 impl Runners {
-    pub fn new(shells: Vec<Shell>) -> Self {
+    pub fn new(shells: Vec<Shell>, script_dir: PathBuf) -> Self {
         let alias = match var("BUNNYHOP_SHELL_ALIAS") {
             Ok(n) => n,
             Err(_) => "hp".to_string(),
         };
-        Runners { alias, shells }
+        Runners {
+            alias,
+            shells,
+            script_dir,
+        }
     }
 
     pub fn add_runners(&self) {
@@ -285,16 +290,13 @@ impl Runners {
         match shell.derive_config_path() {
             Some(config_path) => {
                 println!("[info] Located config file: {}", &config_path.display());
-                let config_file_path = config_path
-                    .parent()
-                    .expect("Failed to get parent directory of config file.")
-                    .join(format!(".bunnyhop.{}.{}", shell.call_cmd(), shell.ext()));
+                let script_file_path = self.script_dir.join(format!("runner.{}", shell.ext()));
                 {
-                    let mut hop_conf_file = OpenOptions::new()
+                    let mut hop_script_file = OpenOptions::new()
                         .write(true)
                         .create(true)
                         .truncate(true)
-                        .open(&config_file_path)?;
+                        .open(&script_file_path)?;
                     let mut conf_file = OpenOptions::new()
                         .append(true)
                         .read(true)
@@ -304,7 +306,7 @@ impl Runners {
                     let source_cmd = format!(
                         "{} \"{}\"",
                         shell.source_cmd(),
-                        &config_file_path.as_path().display()
+                        &script_file_path.as_path().display()
                     )
                     .replace('\\', "/");
                     let script = shell
@@ -312,14 +314,14 @@ impl Runners {
                         .replace("__HOPPERCMD__", exe_name)
                         .replace("__SHELL_CALLABLE__", shell.call_cmd())
                         .replace("__FUNCTION_ALIAS__", &self.alias);
-                    hop_conf_file.write_all(script.as_bytes())?;
+                    hop_script_file.write_all(script.as_bytes())?;
                     let config_file_contents = read_to_string(config_path)?;
                     if !config_file_contents.contains(&source_cmd) {
                         conf_file.write_all(format!("\n{}", source_cmd).as_bytes())?;
                     }
                 }
                 if !cfg!(windows) {
-                    dos2unix::Dos2Unix::convert(&config_file_path.display().to_string(), true);
+                    dos2unix::Dos2Unix::convert(&script_file_path.display().to_string(), true);
                 }
                 Ok(())
             }

@@ -1,54 +1,23 @@
 extern crate anyhow;
 extern crate sqlite;
 
-use std::{fs, io, path::Path};
 #[path = "src/add_runners.rs"]
 mod add_runners;
 use add_runners::{
     Runners,
     Shell::{Bash, Nushell, Powershell, Zsh},
 };
-#[path = "src/configs.rs"]
-mod configs;
-use configs::Environment;
-
-fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> anyhow::Result<()> {
-    fs::create_dir_all(&dst)?;
-    for entry in fs::read_dir(src)? {
-        let entry = entry?;
-        let ty = entry.file_type()?;
-        if ty.is_dir() {
-            copy_dir_all(entry.path(), dst.as_ref().join(entry.file_name()))?;
-        } else {
-            fs::copy(entry.path(), dst.as_ref().join(entry.file_name()))?;
-        }
-    }
-    Ok(())
-}
-
-fn create_database(db_path: impl AsRef<Path>) -> anyhow::Result<()> {
-    let db_path = db_path.as_ref();
-    if !db_path.exists() {
-        let conn = sqlite::open(db_path)?;
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS named_hops (
-            name TEXT PRIMARY KEY,
-            location TEXT NOT NULL
-            )",
-        )?;
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS history (
-            name TEXT NOT NULL,
-            location TEXT NOT NULL,
-            usage INTEGER NOT NULL
-            )",
-        )?;
-    }
-    Ok(())
-}
+#[path = "src/metadata.rs"]
+mod metadata;
+use metadata::Environment;
 
 fn main() {
     let env = Environment::new();
+    let script_dir = env
+        .config_path
+        .parent()
+        .expect("Unable to find config dir")
+        .join("scripts");
 
     println!("Building Bunnyhop version {}", env!("CARGO_PKG_VERSION"));
     for script in [
@@ -75,6 +44,6 @@ fn main() {
     // Any new shells added in the future must be added in the following vector to be properly
     // configured with their respective runner script when `Bunnyhop` is built.
     let supported_shells = vec![Zsh, Bash, Nushell, Powershell];
-    let runners = Runners::new(supported_shells);
+    let runners = Runners::new(supported_shells, script_dir);
     runners.add_runners();
 }

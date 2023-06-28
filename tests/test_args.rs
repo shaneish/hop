@@ -1,50 +1,36 @@
-use bhop::args::Rabbit;
-use std::{env::current_dir, path::PathBuf};
+use bhop::args::Request;
+use std::env;
+use serial_test::serial;
 
-#[test]
-fn test_file_parse() {
-    let mut test_file = PathBuf::from(current_dir().expect("Unable to get current directory."));
-    test_file.push("README.md");
-    let no_nickname = Rabbit::from(test_file.clone(), None);
-    match no_nickname {
-        Rabbit::File(name, loc) => {
-            assert_eq!(name, "README.md".to_string());
-            assert_eq!(loc, test_file);
-        }
-        _ => assert!(false, "Rabbit::from() did not derive Rabbit::File variant."),
-    };
-
-    let nickname = "short".to_string();
-    let with_nickname = Rabbit::from(test_file.clone(), Some(nickname.clone()));
-    match with_nickname {
-        Rabbit::File(name, loc) => {
-            assert_eq!(nickname, name);
-            assert_eq!(test_file, loc);
-        }
-        _ => assert!(false, "Rabbit::from() did not derive Rabbit::File variant."),
-    };
+fn setup_args(args: &[&str]) {
+    let args = args.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+    env::set_var("BHOP_TEST_ARGS", args.join(" "));
 }
 
 #[test]
-fn test_dir_parse() {
-    let mut test_dir = PathBuf::from(current_dir().expect("Unable to get current directory."));
-    test_dir.push("tests");
-    let no_nickname = Rabbit::from(test_dir.clone(), None);
-    match no_nickname {
-        Rabbit::Dir(name, loc) => {
-            assert_eq!(name, "tests".to_string());
-            assert_eq!(loc, test_dir);
-        }
-        _ => assert!(false, "Rabbit::from() did not derive Rabbit::Dir variant."),
-    };
-
-    let nickname = "short".to_string();
-    let with_nickname = Rabbit::from(test_dir.clone(), Some(nickname.clone()));
-    match with_nickname {
-        Rabbit::Dir(name, loc) => {
-            assert_eq!(nickname, name);
-            assert_eq!(test_dir, loc);
-        }
-        _ => assert!(false, "Rabbit::from() did not derive Rabbit::File variant."),
-    };
+#[serial]
+fn test_request_parse_add() {
+    setup_args(&["program", "add", "shortcut", "location"]);
+    let request = Request::parse();
+    assert_eq!(
+        request,
+        Request::Add("shortcut".to_string(), Some("location".to_string()))
+    );
 }
+
+#[test]
+#[serial]
+fn test_request_parse_remove() {
+    setup_args(&["program", "rm", "shortcut"]);
+    let request = Request::parse();
+    assert_eq!(request, Request::Remove("shortcut".to_string()));
+}
+
+#[test]
+#[serial]
+fn test_request_parse_help() {
+    setup_args(&["program", "help"]);
+    let request = Request::parse();
+    assert_eq!(request, Request::Passthrough("__bhop_help__".to_string()));
+}
+
