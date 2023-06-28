@@ -155,9 +155,9 @@ By default, you can find the configuration file for `bhop` at `~/.config/bunnyho
 Check out the config file to see the current options available and to set your personal editors (default is `vi` for Unix and `notepad` for Windows).
 
 Additionally, if you'd to use a location other than the default for your system to store the configuration files and SQLite database, you can set the following environment variables before running `bhop`.
-1) `BHOP_CONFIG_DIRECTORY` - Sets the directory the configuration files will be provisioned in. Defaults to `~/.config/bunnyhop`.
+1) `BHOP_CONFIG_DIRECTORY` - Sets the directory the configuration files will be provisioned in. Defaults to `~/.config/bhop`.
 
-If your shell configuration file is set to a non-default location, you can set the following environment variables manually before building `bunnyhop` and it will configure the runners in the location you set:
+If your shell configuration file is set to a non-default location, you can set the following environment variables manually before building `bhop` and it will configure the runners in the location you set:
 1) `BHOP_ZSH_CONFIG_DIR` - Directory your `.zshrc` file is located.
 2) `BHOP_BASH_CONFIG_DIR` - Directory your `.bashrc` file is located.
 3) `BHOP_NUSHELL_CONFIG_DIR` - Directory your nushell `env.nu` file is located.
