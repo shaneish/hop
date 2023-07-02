@@ -1,5 +1,0 @@
-
-    [test_group]
-    editor = "vim"
-    files = ["file1.rs", "file2.rs"]
-    
