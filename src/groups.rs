@@ -1,5 +1,5 @@
-use toml::{from_str, Value, value::Table};
 use std::{fs, path::Path};
+use toml::{from_str, value::Table, Value};
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct BhopGroup {
@@ -13,16 +13,19 @@ impl BhopGroup {
         let table: Table = from_str(toml).unwrap_or(Table::new());
         match table.get(group) {
             Some(t) => match t {
-                Value::String(cmd) => {
-                    Some(Self {
-                        cmd: Some(cmd.to_string()),
-                        ..Default::default()
-                    })
-                },
+                Value::String(cmd) => Some(Self {
+                    cmd: Some(cmd.to_string()),
+                    ..Default::default()
+                }),
                 Value::Table(t) => {
                     let editor = t.get("editor").map(|v| v.as_str().unwrap().to_string());
                     let files = match t.get("files") {
-                        Some(f) => Some(f.as_array()?.iter().map(|v| v.as_str().unwrap().to_string()).collect()),
+                        Some(f) => Some(
+                            f.as_array()?
+                                .iter()
+                                .map(|v| v.as_str().unwrap().to_string())
+                                .collect(),
+                        ),
                         None => None,
                     };
                     Some(Self {
@@ -30,7 +33,7 @@ impl BhopGroup {
                         editor,
                         files,
                     })
-                },
+                }
                 _ => None,
             },
             None => None,

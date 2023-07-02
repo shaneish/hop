@@ -1,8 +1,8 @@
-use std::env;
-use tempfile::tempdir;
 use bhop::metadata::Environment;
-use std::path::PathBuf;
 use serial_test::serial;
+use std::env;
+use std::path::PathBuf;
+use tempfile::tempdir;
 
 #[test]
 #[serial]
@@ -14,8 +14,14 @@ fn test_environment_default() {
     expected_config_dir.push(".config");
     expected_config_dir.push("bhop");
 
-    assert_eq!(environment.config_path, expected_config_dir.join("bhop.toml"));
-    assert_eq!(environment.db_path, expected_config_dir.join("db").join("bhop.db"));
+    assert_eq!(
+        environment.config_path,
+        expected_config_dir.join("bhop.toml")
+    );
+    assert_eq!(
+        environment.db_path,
+        expected_config_dir.join("db").join("bhop.db")
+    );
 }
 
 #[test]
@@ -26,7 +32,10 @@ fn test_environment_from_env_var() {
 
     let environment = Environment::new();
     assert_eq!(environment.config_path, temp_dir.path().join("bhop.toml"));
-    assert_eq!(environment.db_path, temp_dir.path().join("db").join("bhop.db"));
+    assert_eq!(
+        environment.db_path,
+        temp_dir.path().join("db").join("bhop.db")
+    );
 }
 
 #[test]
@@ -68,4 +77,3 @@ fn test_environment_creates_database() {
     assert!(!shortcuts.is_empty());
     assert!(!history.is_empty());
 }
-

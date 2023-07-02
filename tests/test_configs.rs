@@ -1,8 +1,8 @@
-use::bhop::configs::{Configs, ReadConfig, ReadSettings};
+use ::bhop::configs::{Configs, ReadConfig, ReadSettings};
+use std::collections::HashMap;
+use std::env;
 use std::fs::File;
 use std::io::Write;
-use std::env;
-use std::collections::HashMap;
 use tempfile::tempdir;
 
 #[test]
@@ -95,4 +95,3 @@ fn test_configs_uses_system_editor() {
 
     assert_eq!(configs.default_editor, "nano");
 }
-

@@ -65,17 +65,18 @@ impl Hopper {
 
     fn passthrough(&self, cmd: String) -> anyhow::Result<String> {
         let bhop_exe = sanitize(std::env::current_exe()?)?;
-        Ok(format!(".{}{} {}", env!("BHOP_CMD_SEPARATOR"), bhop_exe, cmd))
+        Ok(format!(
+            ".{}{} {}",
+            env!("BHOP_CMD_SEPARATOR"),
+            bhop_exe,
+            cmd
+        ))
     }
 
     fn map_editor(&self, f: String, ext: Option<String>) -> anyhow::Result<String> {
         let editor = match ext {
             None => self.config.default_editor.to_string(),
-            Some(ext) => match &self
-                .config
-                .editors
-                .get(&ext)
-            {
+            Some(ext) => match &self.config.editors.get(&ext) {
                 Some(special_editor) => special_editor.to_string(),
                 None => self.config.default_editor.to_string(),
             },
@@ -156,7 +157,12 @@ impl Hopper {
 
     fn add_history<T: AsRef<Path>>(&mut self, path: T) -> anyhow::Result<()> {
         let path = path.as_ref();
-        let file_name = fs::canonicalize(path)?.display().to_string();
+        let file_name = fs::canonicalize(path)?
+            .file_name()
+            .expect("Unable to extract file name for shortcut")
+            .to_str()
+            .expect("Unable to extract file name for shortcut")
+            .to_string();
         let history = self.find_history(&file_name);
         let usage = match history {
             Some((_, usage)) => usage + 1,
@@ -216,7 +222,12 @@ impl Hopper {
                     } else {
                         ".".to_string()
                     };
-                    Ok(format!("{}{}{}", move_dir, env!("BHOP_CMD_SEPARATOR"), self.map_editor(sanitized, ext)?))
+                    Ok(format!(
+                        "{}{}{}",
+                        move_dir,
+                        env!("BHOP_CMD_SEPARATOR"),
+                        self.map_editor(sanitized, ext)?
+                    ))
                 }
             }
             None => Err(anyhow::Error::msg("No matching options found.")),
@@ -322,9 +333,12 @@ impl Hopper {
         let group_path = path.join(env!("BHOP_PROJECT_CONFIGS"));
         match groups::BhopGroup::from(&subgroup, group_path) {
             Some(options) => match options.cmd {
-                Some(cmd) => {
-                    Ok(format!("{}{}{}", sanitize(&path)?, env!("BHOP_CMD_SEPARATOR"), cmd))
-                },
+                Some(cmd) => Ok(format!(
+                    "{}{}{}",
+                    sanitize(&path)?,
+                    env!("BHOP_CMD_SEPARATOR"),
+                    cmd
+                )),
                 None => match options.files {
                     Some(files) => {
                         let mut files = files.into_iter();
@@ -335,15 +349,28 @@ impl Hopper {
                                 // crate, expand the glob, and then find the extension of the
                                 // first file, but didn't want to add another dependency just for
                                 // this.
-                                let ext = PathBuf::from(first.replace('*', "x")).extension().map(|s| s.to_str().unwrap().to_string());
-                                let editor_cmd = options.editor.unwrap_or(self.map_editor(first, ext)?);
+                                let ext = PathBuf::from(first.replace('*', "x"))
+                                    .extension()
+                                    .map(|s| s.to_str().unwrap().to_string());
+                                let editor_cmd =
+                                    options.editor.unwrap_or(self.map_editor(first, ext)?);
                                 let rest = files.collect::<Vec<String>>().join(" ");
-                                let rest = if rest.is_empty() { "".to_string() } else { format!(" {}", rest) };
-                                Ok(format!("{}{}{}{}", sanitize(&path)?, env!("BHOP_CMD_SEPARATOR"), editor_cmd, rest))
-                            },
+                                let rest = if rest.is_empty() {
+                                    "".to_string()
+                                } else {
+                                    format!(" {}", rest)
+                                };
+                                Ok(format!(
+                                    "{}{}{}{}",
+                                    sanitize(&path)?,
+                                    env!("BHOP_CMD_SEPARATOR"),
+                                    editor_cmd,
+                                    rest
+                                ))
+                            }
                             None => self.bhop_it(group, true),
                         }
-                    },
+                    }
                     None => Err(anyhow::Error::msg("No matching options found.")),
                 },
             },

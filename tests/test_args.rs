@@ -1,6 +1,6 @@
 use bhop::args::Request;
-use std::env;
 use serial_test::serial;
+use std::env;
 
 fn setup_args(args: &[&str]) {
     let args = args.iter().map(|s| s.to_string()).collect::<Vec<_>>();
@@ -33,4 +33,3 @@ fn test_request_parse_help() {
     let request = Request::parse();
     assert_eq!(request, Request::Passthrough("__bhop_help__".to_string()));
 }
-

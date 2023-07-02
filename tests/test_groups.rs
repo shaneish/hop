@@ -22,7 +22,10 @@ fn test_from_str_with_table() {
     let bhop_group = BhopGroup::from_str("test_group", toml).unwrap();
     assert_eq!(bhop_group.cmd, None);
     assert_eq!(bhop_group.editor, Some("vim".to_string()));
-    assert_eq!(bhop_group.files, Some(vec!["file1.rs".to_string(), "file2.rs".to_string()]));
+    assert_eq!(
+        bhop_group.files,
+        Some(vec!["file1.rs".to_string(), "file2.rs".to_string()])
+    );
 }
 
 #[test]
@@ -39,14 +42,21 @@ fn test_from_str_no_group() {
 #[test]
 fn test_from_file() {
     let path = Path::new("test.toml");
-    fs::write(&path, r#"
+    fs::write(
+        &path,
+        r#"
     [test_group]
     editor = "vim"
     files = ["file1.rs", "file2.rs"]
-    "#).unwrap();
+    "#,
+    )
+    .unwrap();
 
     let bhop_group = BhopGroup::from("test_group", &path).unwrap();
     assert_eq!(bhop_group.cmd, None);
     assert_eq!(bhop_group.editor, Some("vim".to_string()));
-    assert_eq!(bhop_group.files, Some(vec!["file1.rs".to_string(), "file2.rs".to_string()]));
+    assert_eq!(
+        bhop_group.files,
+        Some(vec!["file1.rs".to_string(), "file2.rs".to_string()])
+    );
 }
