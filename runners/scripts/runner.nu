@@ -1,6 +1,6 @@
 def-env __FUNCTION_ALIAS__ [cmd: string, p1: string = "", p2: string = "", p3: string = ""] {
     let command = (__SHELL_CALLABLE__ -c ($"__HOPPERCMD__ ($cmd) ($p1) ($p2) ($p3)" | str trim))
-    if ($command | str contains "__CMD_SEPARATOR__") {
+    if ($command | str contains "__CMD_SEPARATOR__" --not) {
         echo $command
         return
     }
