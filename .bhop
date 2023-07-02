@@ -1,0 +1,7 @@
+test = "cargo test -- --nocapture"
+
+[default]
+files = ["src/lib.rs", "src/args.rs", "src/configs.rs", "src/groups.rs", "src/metadata.rs"]
+
+[tests]
+files = ["tests/*.rs"]

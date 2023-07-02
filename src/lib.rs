@@ -1,5 +1,6 @@
 pub mod args;
 pub mod configs;
+pub mod groups;
 pub mod metadata;
 use colored::Colorize;
 use glob::glob;
@@ -57,7 +58,7 @@ impl Hopper {
             "{}{}{}",
             move_dir,
             env!("BHOP_CMD_SEPARATOR"),
-            self.map_editor(config_path)?
+            self.map_editor(config_path, None)?
         );
         Ok(cmd)
     }
@@ -67,24 +68,22 @@ impl Hopper {
         Ok(format!(".{}{} {}", env!("BHOP_CMD_SEPARATOR"), bhop_exe, cmd))
     }
 
-    fn map_editor<T: AsRef<Path>>(&self, f: T) -> anyhow::Result<String> {
-        let ext_option = f.as_ref().extension();
-        let editor = match ext_option {
+    fn map_editor(&self, f: String, ext: Option<String>) -> anyhow::Result<String> {
+        let editor = match ext {
             None => self.config.default_editor.to_string(),
             Some(ext) => match &self
                 .config
                 .editors
-                .get(&(ext.to_str().expect("Cannot extract extension.").to_string()))
+                .get(&ext)
             {
                 Some(special_editor) => special_editor.to_string(),
                 None => self.config.default_editor.to_string(),
             },
         };
-        let sanitized = sanitize(f.as_ref())?;
         if editor.contains("{}") {
-            Ok(editor.replace("{}", sanitized.as_str()))
+            Ok(editor.replace("{}", &f))
         } else {
-            Ok(format!("{} {}", editor, sanitize(f.as_ref())?))
+            Ok(format!("{} {}", editor, f))
         }
     }
 
@@ -157,7 +156,7 @@ impl Hopper {
 
     fn add_history<T: AsRef<Path>>(&mut self, path: T) -> anyhow::Result<()> {
         let path = path.as_ref();
-        let file_name = path.file_name().unwrap().to_str().unwrap().to_string();
+        let file_name = fs::canonicalize(path)?.display().to_string();
         let history = self.find_history(&file_name);
         let usage = match history {
             Some((_, usage)) => usage + 1,
@@ -208,15 +207,16 @@ impl Hopper {
             Some(path) => {
                 self.add_history(&path)?;
                 if path.is_dir() && !edit_dir {
-                    sanitize(path)
+                    Ok(format!("{}{}", sanitize(path)?, env!("BHOP_CMD_SEPARATOR")))
                 } else {
+                    let sanitized = sanitize(&path)?;
+                    let ext = path.extension().map(|s| s.to_str().unwrap().to_string());
                     let move_dir = if self.config.always_jump {
                         sanitize(path.parent().unwrap_or(&path))?
                     } else {
                         ".".to_string()
                     };
-                    let cmd = format!("{}{}{}", move_dir, env!("BHOP_CMD_SEPARATOR"), self.map_editor(path)?);
-                    Ok(cmd)
+                    Ok(format!("{}{}{}", move_dir, env!("BHOP_CMD_SEPARATOR"), self.map_editor(sanitized, ext)?))
                 }
             }
             None => Err(anyhow::Error::msg("No matching options found.")),
@@ -316,7 +316,38 @@ impl Hopper {
         println!("{}", formatted_hops.join("\n"));
     }
 
-    fn edit_request(&mut self, name: String, _section: Option<String>) -> anyhow::Result<String> {
-        self.bhop_it(name, true)
+    fn use_group(&mut self, group: String, subgroup: Option<String>) -> anyhow::Result<String> {
+        let subgroup = subgroup.unwrap_or("default".to_string());
+        let path = self.grab(group.clone()).unwrap_or(PathBuf::from("."));
+        let group_path = path.join(env!("BHOP_PROJECT_CONFIGS"));
+        match groups::BhopGroup::from(&subgroup, group_path) {
+            Some(options) => match options.cmd {
+                Some(cmd) => {
+                    Ok(format!("{}{}{}", sanitize(&path)?, env!("BHOP_CMD_SEPARATOR"), cmd))
+                },
+                None => match options.files {
+                    Some(files) => {
+                        let mut files = files.into_iter();
+                        match files.next() {
+                            Some(first) => {
+                                // the method to find the extension below is a bit hacky, but
+                                // works.  Originally I was going to bring in the external glob
+                                // crate, expand the glob, and then find the extension of the
+                                // first file, but didn't want to add another dependency just for
+                                // this.
+                                let ext = PathBuf::from(first.replace('*', "x")).extension().map(|s| s.to_str().unwrap().to_string());
+                                let editor_cmd = options.editor.unwrap_or(self.map_editor(first, ext)?);
+                                let rest = files.collect::<Vec<String>>().join(" ");
+                                let rest = if rest.is_empty() { "".to_string() } else { format!(" {}", rest) };
+                                Ok(format!("{}{}{}{}", sanitize(&path)?, env!("BHOP_CMD_SEPARATOR"), editor_cmd, rest))
+                            },
+                            None => self.bhop_it(group, true),
+                        }
+                    },
+                    None => Err(anyhow::Error::msg("No matching options found.")),
+                },
+            },
+            None => Ok("Unable to find group or subgroup.".to_string()),
+        }
     }
 }

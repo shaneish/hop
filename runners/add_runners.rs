@@ -258,7 +258,7 @@ pub struct Runners {
 
 impl Runners {
     pub fn new(shells: Vec<Shell>, script_dir: PathBuf) -> Self {
-        let alias = match var("BHOP_SHELL_ALIAS") {
+        let alias = match var("BHOP_DEFAULT_ALIAS") {
             Ok(n) => n,
             Err(_) => "hp".to_string(),
         };
