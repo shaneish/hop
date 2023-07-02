@@ -248,7 +248,7 @@ impl Hopper {
             None => "*".to_string(),
         };
         let query = format!(
-            "SELECT name, location FROM shortcuts WHERE name GLOB '{}' OR location LIKE '{}' ORDER BY name",
+            "SELECT name, location FROM shortcuts WHERE name GLOB '{}' OR location GLOB '{}' ORDER BY name",
             &filter,
             &filter,
         );
@@ -268,7 +268,7 @@ impl Hopper {
             r#"SELECT h1.name, h1.location FROM history AS h1 
                 INNER JOIN 
                     (SELECT name, MIN(usage) AS min_usage, MIN(location) AS min_loc FROM history 
-                     WHERE name GLOB '{}' OR location LIKE '{}' GROUP BY name) AS h2 
+                     WHERE name GLOB '{}' OR location GLOB '{}' GROUP BY name) AS h2 
                 ON (h1.name = h2.name AND h1.usage = h2.min_usage AND h1.location = h2.min_loc) 
                 GROUP BY h1.name, h1.location 
                 ORDER BY h1.name"#,
