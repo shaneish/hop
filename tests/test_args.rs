@@ -10,7 +10,7 @@ fn setup_args(args: &[&str]) {
 #[test]
 #[serial]
 fn test_request_parse_add() {
-    setup_args(&["program", "add", "shortcut", "location"]);
+    setup_args(&["hp", "add", "shortcut", "location"]);
     let request = Request::parse();
     assert_eq!(
         request,
@@ -21,7 +21,7 @@ fn test_request_parse_add() {
 #[test]
 #[serial]
 fn test_request_parse_remove() {
-    setup_args(&["program", "rm", "shortcut"]);
+    setup_args(&["hp", "rm", "shortcut"]);
     let request = Request::parse();
     assert_eq!(request, Request::Remove("shortcut".to_string()));
 }
@@ -29,7 +29,7 @@ fn test_request_parse_remove() {
 #[test]
 #[serial]
 fn test_request_parse_help() {
-    setup_args(&["program", "help"]);
+    setup_args(&["hp", "help"]);
     let request = Request::parse();
     assert_eq!(request, Request::Passthrough("__bhop_help__".to_string()));
 }

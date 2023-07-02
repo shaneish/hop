@@ -3,13 +3,6 @@
 # shortcuts to files.
 default_editor="vi"
 
-# Use this to set the maximum number of saved entries
-# in the bunnyhop command history table.
-#
-# If set to 0, will continue to history indefinitely
-# without removing.
-max_history=0
-
 # Use this choose how to display the results of the `ls`
 # or `list` command.
 #

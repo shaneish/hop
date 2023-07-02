@@ -8,9 +8,9 @@ use std::env;
 pub enum Request {
     Add(String, Option<String>),
     Remove(String),
-    Edit(String, Option<String>),
-    Grab(String),
     Use(String, Option<String>),
+    Grab(String),
+    Group(String, Option<String>),
     Passthrough(String),
     Search(Option<String>),
     Notify(String),
@@ -39,9 +39,12 @@ impl Request {
                     Some(reference) => Request::Remove(reference),
                     None => Request::Notify("No shortcut to remove provided.".to_string()),
                 },
-                "e" | "edit" => match args.get(2).map(|s| s.to_string()) {
-                    Some(reference) => Request::Edit(reference, args.get(3).map(|s| s.to_string())),
-                    None => Request::Notify("No reference to edit provided.".to_string()),
+                "u" | "use" => match args.get(2).map(|s| s.to_string()) {
+                    Some(reference) => match args.get(3).map(|s| s.to_string()) {
+                        Some(subgroup) => Request::Group(reference, Some(subgroup)),
+                        None => Request::Group(".".to_string(), Some(reference)),
+                    },
+                    None => Request::Notify("No shortcut to use provided.".to_string()),
                 },
                 "g" | "grab" => match args.get(2) {
                     Some(reference) => Request::Grab(reference.to_string()),
@@ -59,7 +62,7 @@ impl Request {
                 "__bhop_version__" => {
                     println!(
                         "{} 🐇 {}{}",
-                        "BunnyHop".cyan().bold(),
+                        "Bhop".cyan().bold(),
                         "v.".bold(),
                         env!("CARGO_PKG_VERSION")
                     );
@@ -81,7 +84,7 @@ impl Hopper {
                 self.add_shortcut(reference, name).map(|_| "".to_string())
             }
             Request::Remove(reference) => self.remove_shortcut(reference).map(|_| "".to_string()),
-            Request::Edit(reference, name) => self.edit_request(reference, name),
+            Request::Group(reference, subgroup) => self.use_group(reference, subgroup),
             Request::Grab(reference) => {
                 let path = self.grab(reference);
                 match path {
