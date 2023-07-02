@@ -4,6 +4,7 @@ pub mod groups;
 pub mod metadata;
 use colored::Colorize;
 use glob::glob;
+use std::env::var;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -213,7 +214,11 @@ impl Hopper {
             Some(path) => {
                 self.add_history(&path)?;
                 if path.is_dir() && !edit_dir {
-                    Ok(format!("{}{}", sanitize(path)?, env!("BHOP_CMD_SEPARATOR")))
+                    Ok(format!(
+                        "{}{}",
+                        sanitize(path)?,
+                        var("BHOP_CMD_SEPARATOR").unwrap_or("|".to_string())
+                    ))
                 } else {
                     let sanitized = sanitize(&path)?;
                     let ext = path.extension().map(|s| s.to_str().unwrap().to_string());
@@ -330,13 +335,13 @@ impl Hopper {
     fn use_group(&mut self, group: String, subgroup: Option<String>) -> anyhow::Result<String> {
         let subgroup = subgroup.unwrap_or("default".to_string());
         let path = self.grab(group.clone()).unwrap_or(PathBuf::from("."));
-        let group_path = path.join(env!("BHOP_PROJECT_CONFIGS"));
+        let group_path = path.join(var("BHOP_PROJECT_CONFIGS").unwrap_or(".bhop".to_string()));
         match groups::BhopGroup::from(&subgroup, group_path) {
             Some(options) => match options.cmd {
                 Some(cmd) => Ok(format!(
                     "{}{}{}",
                     sanitize(&path)?,
-                    env!("BHOP_CMD_SEPARATOR"),
+                    var("BHOP_CMD_SEPARATOR").unwrap_or("|".to_string()),
                     cmd
                 )),
                 None => match options.files {
@@ -363,7 +368,7 @@ impl Hopper {
                                 Ok(format!(
                                     "{}{}{}{}",
                                     sanitize(&path)?,
-                                    env!("BHOP_CMD_SEPARATOR"),
+                                    var("BHOP_CMD_SEPARATOR").unwrap_or("|".to_string()),
                                     editor_cmd,
                                     rest
                                 ))

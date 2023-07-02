@@ -314,7 +314,12 @@ impl Runners {
                         .replace("__HOPPERCMD__", exe_name)
                         .replace("__SHELL_CALLABLE__", shell.call_cmd())
                         .replace("__FUNCTION_ALIAS__", &self.alias)
-                        .replace("__CMD_SEPARATOR__", env!("BHOP_CMD_SEPARATOR"));
+                        .replace(
+                            "__CMD_SEPARATOR__",
+                            var("BHOP_CMD_SEPARATOR")
+                                .unwrap_or("|".to_string())
+                                .as_str(),
+                        );
                     hop_script_file.write_all(script.as_bytes())?;
                     let config_file_contents = read_to_string(config_path)?;
                     if !config_file_contents.contains(&source_cmd) {
