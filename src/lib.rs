@@ -58,7 +58,7 @@ impl Hopper {
         let cmd = format!(
             "{}{}{}",
             move_dir,
-            env!("BHOP_CMD_SEPARATOR"),
+            var("BHOP_CMD_SEPARATOR").unwrap_or("|".to_string()),
             self.map_editor(config_path, None)?
         );
         Ok(cmd)
@@ -68,7 +68,7 @@ impl Hopper {
         let bhop_exe = sanitize(std::env::current_exe()?)?;
         Ok(format!(
             ".{}{} {}",
-            env!("BHOP_CMD_SEPARATOR"),
+            var("BHOP_CMD_SEPARATOR").unwrap_or("|".to_string()),
             bhop_exe,
             cmd
         ))
@@ -230,7 +230,7 @@ impl Hopper {
                     Ok(format!(
                         "{}{}{}",
                         move_dir,
-                        env!("BHOP_CMD_SEPARATOR"),
+                        var("BHOP_CMD_SEPARATOR").unwrap_or("|".to_string()),
                         self.map_editor(sanitized, ext)?
                     ))
                 }
