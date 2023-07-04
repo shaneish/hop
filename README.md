@@ -1,4 +1,4 @@
-# bhop
+# bhop (bunnyhop)
 [![Test Status](https://github.com/UnsafeOats/hop/actions/workflows/tests.yml/badge.svg)](https::/github.com/UnsafeOats/hop/actions)
 [![Coverage Status](https://codecov.io/gh/UnsafeOats/hop/branch/master/graph/badge.svg)](https://codecov.io/gh/UnsafeOats/hop)
 [![Crates.io](https://img.shields.io/crates/v/bhop.svg)](https://crates.io/crates/bhop)
