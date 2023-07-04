@@ -1,6 +1,6 @@
 # bhop
-![Test Status](https://github.com/UnsafeOats/hop/actions/workflows/tests.yml/badge.svg)
-![License](https://img.shields.io/github/license/UnsafeOats/hop)
+[![Test Status](https://github.com/UnsafeOats/hop/actions/workflows/tests.yml/badge.svg)](https::/github.com/UnsafeOats/hop/actions)
+[![License](https://img.shields.io/github/license/UnsafeOats/hop)](LICENSE)
 
 ### what even is this tho??
 
