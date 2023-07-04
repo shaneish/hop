@@ -104,6 +104,7 @@ impl Shell {
         match self {
             Shell::Nushell => include_str!("scripts/runner.nu"),
             Shell::Powershell => include_str!("scripts/runner.ps1"),
+            Shell::Zsh => include_str!("scripts/runner.zsh"),
             _ => include_str!("scripts/runner.sh"),
         }
     }
