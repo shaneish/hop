@@ -59,4 +59,5 @@ fn test_from_file() {
         bhop_group.files,
         Some(vec!["file1.rs".to_string(), "file2.rs".to_string()])
     );
+    fs::remove_file(&path).unwrap();
 }

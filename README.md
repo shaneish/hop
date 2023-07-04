@@ -1,6 +1,9 @@
-# BHOP
+# bhop (bunnyhop)
+[![Test Status](https://github.com/UnsafeOats/hop/actions/workflows/tests.yml/badge.svg)](https::/github.com/UnsafeOats/hop/actions)
+[![Crates.io](https://img.shields.io/crates/v/bhop.svg)](https://crates.io/crates/bhop)
+[![License](https://img.shields.io/github/license/UnsafeOats/hop)](LICENSE)
 
-### WHAT EVEN IS THIS ??
+### what even is this tho??
 
 **Tl;dr: a tool to quickly work with your filesystem via saved shortcuts and historical movements. Allows user to both jump to other locations or open files in other locations in an editor of your choice with a single command.**
 
@@ -26,7 +29,7 @@ However, as this required maintaining separate scripts for the various shells I 
 
 This iteration also includes many improvements over the very simple shell function used before (and doesn't clutter you're system with unnecessary symlinks).
 
-### HOW TO INSTALL
+### install
 Install requires `cargo` (obvi, since it's a tool written in Rust).
 
 If you currently don't have `rust` or `cargo` set up on your system, just run the following command before installing `bunnyhop`
@@ -55,7 +58,7 @@ foo@bar:~$ hp locate
 /home/you/.config/bhop
 ```
 
-### HOW TO USE
+### use
 ```
 foo@bar:~$ hp version # show version
 bunnyhop 🐇 v.0.5.5
@@ -141,7 +144,7 @@ foo@bar:~$ echo $PWD
 /home/you/projects/hop/src
 ```
 
-### GENERAL FLOW FOR RESOLVING `hp` COMMANDS
+### general flow for resolving `HP` commands
 Calling a `hp` command with a shortcut name or path will attempt to do three things to resolve where it should jump you to:
 1) Check if it is a valid location within the file system.
 2) Check if it is within the saved list of shortcuts manually added by the user.
@@ -149,7 +152,7 @@ Calling a `hp` command with a shortcut name or path will attempt to do three thi
 
 The order between 1) and 2) can be switched in your `bhop.toml` configuration file.
 
-### CUSTOM CONFIGURATION
+### custom configuration
 By default, you can find the configuration file for `bhop` at `~/.config/bunnyhop/bunnyhop.toml`.
 
 Check out the config file to see the current options available and to set your personal editors (default is `vi` for Unix and `notepad` for Windows).
@@ -163,14 +166,12 @@ If your shell configuration file is set to a non-default location, you can set t
 3) `BHOP_NUSHELL_CONFIG_DIR` - Directory your nushell `env.nu` file is located.
 4) `BHOP_POWERSHELL_CONFIG_DIR` - Directory your powershell `profile.ps1` or `Microsoft.PowerShell_profile.ps1` files are located.
 
-### TODO
+### todo
 1) Write a more comprehensive suite of unit tests.
-2) Add functionality to search stored history for possible locations.
-3) Add customized editor launch commands (ie allow flags when calling an editor to open a file).
-4) Make a Neovim plugin so I can easily navigate without opening a new terminal panel or closing current terminal panel.
-5) Create ability to add shortcuts for groups of files that can be opened together in the editor at the same time.
+2) Add customized editor launch commands (ie allow flags when calling an editor to open a file).
+3) Make a Neovim plugin so I can easily navigate without opening a new terminal panel or closing current terminal panel.
 
-## LICENSE
+## license
 MIT.
 
 If you have issues or would like some update/improvement, feel free to reach out and file an issue.
