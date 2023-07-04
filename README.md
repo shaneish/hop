@@ -1,5 +1,6 @@
 # bhop
-![tests](https://github.com/UnsafeOats/hop/actions/workflows/test.yml/badge.svg)
+![Test Status](https://github.com/UnsafeOats/hop/actions/workflows/tests.yml/badge.svg)
+![License](https://img.shields.io/github/license/UnsafeOats/hop)
 
 ### what even is this tho??
 
