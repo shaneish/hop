@@ -92,6 +92,7 @@ impl Shell {
         match self {
             Shell::Nushell => "nu",
             Shell::Powershell => "ps1",
+            Shell::Zsh => "zsh",
             _ => "sh",
         }
     }

@@ -59,9 +59,9 @@ foo@bar:~$ hp locate
 ```
 
 ### use
-```
+```console
 foo@bar:~$ hp version # show version
-bunnyhop 🐇 v.0.5.5
+bunnyhop 🐇 v.0.8.6
 ```
 To add a shortcut to your directory with the shortcut name `example`:
 ```console
@@ -77,9 +77,11 @@ foo@bar:~$ hp /home/you/.config configs
 ```
 To add a shortcut to a file that can be opened up in the set editor, use:
 ```console
-foo@bar:~$ hp add /home/you/.configs/nvim/init.vim # will create a shortcut to init.vim named `init.vim`
+# will create a shortcut to init.vim named `init.vim`
+foo@bar:~$ hp add /home/you/.configs/nvim/init.vim
 
-foo@bar:~$ hp add /home/you/.configs/nvim/init.vim nvim-confs # will create a shortcut to init.vim named `nvim-confs`
+# will create a shortcut to init.vim named `nvim-confs`
+foo@bar:~$ hp add /home/you/.configs/nvim/init.vim nvim-confs
 ```
 To open a shortcut file in your configured editor of choice, use either of the following:
 ```console
