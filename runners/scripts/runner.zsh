@@ -4,9 +4,8 @@ __FUNCTION_ALIAS__() {
         echo $out
         return
     fi
-    IFS="__CMD_SEPARATOR__" read -ra arr <<< "$out"
-    export arr=(${(@s/__CMD_SEPARATOR__/)out})
-    cd ${arr[0]}
-    __SHELL_CALLABLE__ -c "${arr[1]}"
+    export arr=(${(@s:__CMD_SEPARATOR__:)out})
+    cd ${arr[1]}
+    __SHELL_CALLABLE__ -c "${arr[2]}"
 }
 

@@ -1,6 +1,6 @@
 [package]
 name = "bhop"
-version = "0.8.5"
+version = "0.8.6"
 edition = "2021"
 authors = ["Shane Stephenson <stephenson.shane.a@gmail.com>"]
 readme = "README.md"
