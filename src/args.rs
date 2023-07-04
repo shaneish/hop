@@ -96,7 +96,7 @@ impl Hopper {
             }
             Request::Use(reference, name) => match name {
                 Some(n) => {
-                    self.add_shortcut(reference.clone(), Some(n))?;
+                    self.add_shortcut(n, Some(reference.clone()))?;
                     self.bhop_it(reference, false)
                 }
                 None => self.bhop_it(reference, false),
