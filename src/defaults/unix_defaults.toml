@@ -36,6 +36,7 @@ prioritize_shortcuts=true
 always_jump=false
 
 # Set prefix and suffix for all search terms
+# If you don't want permissive search by default, set these to the empty string ""
 search_match_prefix="*"
 search_match_suffix="*"
 

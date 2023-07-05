@@ -8,7 +8,7 @@ use std::env::var;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-fn sanitize<T: AsRef<Path>>(p: T) -> anyhow::Result<String> {
+pub fn sanitize<T: AsRef<Path>>(p: T) -> anyhow::Result<String> {
     // Back slashes in Windows paths create so many headaches.  Since Windows accepts forward
     // slashes in place of back slashes anyways, this will ensure that all paths are absolute
     // with consistent forward slashes
@@ -91,12 +91,18 @@ impl Hopper {
 
     fn add_shortcut<T: AsRef<Path>>(
         &mut self,
-        name: String,
-        path: Option<T>,
+        path: T,
+        name: Option<String>,
     ) -> anyhow::Result<()> {
-        let path = match path {
-            Some(p) => p.as_ref().to_path_buf(),
-            None => std::env::current_dir()?,
+        let name = match name {
+            Some(n) => n,
+            None => path
+                .as_ref()
+                .file_name()
+                .ok_or(anyhow::anyhow!("Unable to extract file name for shortcut"))?
+                .to_str()
+                .ok_or(anyhow::anyhow!("Unable to extract file name for shortcut"))?
+                .to_string(),
         };
         let path_as_string = sanitize(path)?;
         let query = format!(

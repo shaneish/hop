@@ -5,3 +5,6 @@ files = ["src/lib.rs", "src/args.rs", "src/configs.rs", "src/groups.rs", "src/me
 
 [tests]
 files = ["tests/*.rs"]
+
+[runners]
+files = ["runners/*.rs", "runners/scripts/*"]
