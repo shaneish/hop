@@ -162,7 +162,7 @@ foo@bar:~$ echo $PWD
 /home/you/projects/hop/src
 ```
 If you place a file named `.bhop` in a directory with a shortcut, you can set different "windows" or "functions" for that shortcut directory.  An example `.bhop` file would look like:
-```
+```console
 foo@bar:~$ cat .bhop
 test = "cargo test -- --nocapture"
 
@@ -180,13 +180,13 @@ editor = "jupyter-notebook"
 files = ["examples/*.ipynb"]
 ```
 Given the above `.bhop` file in a directory with shortcut name `example_shortcut`, you can run unit tests with the following commands:
-```
+```console
 foo@bar:~$ hp group example_shortcut test
 ...
 foo@bar:~$ hp ! example_shortcut test # alternate command
 ```
 Given the same `.bhop` file and the same shortcut name `example_shortcut`, you can open all the files and scripts in the `runners` folder in your default editor with:
-```
+```console
 foo@bar:~$ hp group example_shortcut runners
 ...
 foo@bar:~$ hp ! example_shortcut runners # alternate command
