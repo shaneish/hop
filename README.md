@@ -62,14 +62,18 @@ foo@bar:~$ hp locate
 ```console
 foo@bar:~$ hp version # show version
 bunnyhop 🐇 v.0.8.6
+foo@bar:~$ hp v # alternate command
+bunnyhop 🐇 v.0.8.6
 ```
 To add a shortcut to your directory with the shortcut name `example`:
 ```console
-foo@bar:~$ hp add example
+foo@bar:~$ hp add . example
+foo@bar:~$ hp + . example # alternate command
 ```
 To add a shortcut to the `/home/you/.config` directory with the shortcut name `configs`:
 ```console
-foo@bar:~$ hp add configs /home/you/.config
+foo@bar:~$ hp add /home/you/.config configs
+foo@bar:~$ hp + /home/you/.config configs # alternate command
 ```
 Of course, if you want to move to your `/home/you/.config` director and rename it to `configs` at the same time:
 ```console
@@ -83,23 +87,31 @@ foo@bar:~$ hp add /home/you/.configs/nvim/init.vim
 # will create a shortcut to init.vim named `nvim-confs`
 foo@bar:~$ hp add /home/you/.configs/nvim/init.vim nvim-confs
 ```
-To open a shortcut file in your configured editor of choice, use either of the following:
+If a shortcut maps to a file and not a directory, open that file in your editor by "jumping" to it:
 ```console
-foo@bar:~$ hp edit init.vim # full command consistent with opening a directory for editing
-
-foo@bar:~$ hp init.vim # shortened command that just works for editing files and not directories
+foo@bar:~$ hp init.vim # full command consistent with opening a directory for editing
 ```
 To delete a shortcut with name `example`:
 ```console
-foo@bar:~$ hp remove example # can be used from any location
+foo@bar:~$ hp remove example
+foo@bar:~$ hp rm example # alternate command
+foo@bar:~$ hp - example # alternate command
 ```
 To jump to the `example` named directory:
 ```console
 foo@bar:~$ hp example
 ```
-To jump to the `example` named directory and open your default editor in that directory:
+To jump to the `example` named directory and open your default configuration for that directory:
 ```console
-foo@bar:~$ hp edit example
+foo@bar:~$ hp group example
+foo@bar:~$ hp grp example # alternate command
+foo@bar:~$ hp ! example # alternate command
+```
+To jump to the `example` named directory and open your configuration for that directory named `tests`:
+```console
+foo@bar:~$ hp group example tests
+foo@bar:~$ hp grp example tests # alternate command
+foo@bar:~$ hp ! example tests # alternate command
 ```
 To list available hops:
 ```console
@@ -112,6 +124,8 @@ example  -> /home/you/project/example_directory
 History:
 src -> /home/you/projects/hop/src
 hop -> /home/you/projects/hop
+foo@bar:~$ hp ls # alternate command
+foo@bar:~$ hp .. # alternate command
 ```
 To list available hops that have `hop` in them:
 ```console
@@ -124,8 +138,10 @@ hop -> /home/you/projects/hop
 ```
 To grab the output path of the hop with shortcut name `example`:
 ```console
-foo@bar:~$ hp grab example
+foo@bar:~$ hp find example
 /home/you/project/example_directory
+foo@bar:~$ hp f example # alternate command
+foo@bar:~$ hp ? example # alternate command
 ```
 You can use `hp` like `cd` to move into directories or edit files in your current directory.
 This will then add that directory to the stored history and allow you to jump to it in the future without adding a shortcut directly.
@@ -145,7 +161,36 @@ foo@bar:~$ hp src
 foo@bar:~$ echo $PWD
 /home/you/projects/hop/src
 ```
+If you place a file named `.bhop` in a directory with a shortcut, you can set different "windows" or "functions" for that shortcut directory.  An example `.bhop` file would look like:
+```
+foo@bar:~$ cat .bhop
+test = "cargo test -- --nocapture"
 
+[default]
+files = ["src/*.rs"]
+
+[tests]
+files = ["tests/*.rs"]
+
+[runners]
+files = ["runners/*.rs", "runners/scripts/*"]
+
+[notebooks]
+editor = "jupyter-notebook"
+files = ["examples/*.ipynb"]
+```
+Given the above `.bhop` file in a directory with shortcut name `example_shortcut`, you can run unit tests with the following commands:
+```
+foo@bar:~$ hp group example_shortcut test
+...
+foo@bar:~$ hp ! example_shortcut test # alternate command
+```
+Given the same `.bhop` file and the same shortcut name `example_shortcut`, you can open all the files and scripts in the `runners` folder in your default editor with:
+```
+foo@bar:~$ hp group example_shortcut runners
+...
+foo@bar:~$ hp ! example_shortcut runners # alternate command
+```
 ### general flow for resolving `HP` commands
 Calling a `hp` command with a shortcut name or path will attempt to do three things to resolve where it should jump you to:
 1) Check if it is a valid location within the file system.

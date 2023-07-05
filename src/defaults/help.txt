@@ -1,27 +1,17 @@
 Terminal shortcuts for hopping around your filesystem.
 
-Usage: hp [COMMAND] [*TARGET] [*EXTRA]
+Usage: {} {} [*TARGET] [*EXTRA]
 
 Commands:
-    add, a [*TARGET] [*EXTRA]: add a shortcut to the current directory with name TARGET.  If
-        a second argument is given, that argument is the path that the shortcut will point to.
-
-    list, ls, l [*TARGET]: list all shortcuts.  if TARGET given, list all shortcuts
-        that glob match TARGET in their name or location.
-
-    remove, rm, r [TARGET]: remove the shortcut with name TARGET.
-
-    grab, g [TARGET]: grab the path of the shortcut with name TARGET.
-
-    locate, loc: return the bhop configuration folder.
-
-    version, v: return the current version of bhop.
-
-    help, h: print this help message.
-
-    edit, e [TARGET] [*EXTRA]: open the TARGET in your editor of choice.  If EXTRA given, open
-        the EXTRA group in your editor of choice.
-
-    brb: mark the current directory for later return.
-
-    back: return to the last directory marked with brb.
+    {} [*TARGET] [*EXTRA]: add a shortcut to the current directory with name TARGET.  If a second argument is given, that argument is the path that the shortcut will point to.
+    {} [*TARGET]: list all shortcuts.  if TARGET given, list all shortcuts that glob match TARGET in their name or location.
+    {} [TARGET]: remove the shortcut with name TARGET.
+    {} [TARGET]: grab the path of the shortcut with name TARGET.
+    {} [TARGET] [*EXTRA]: Execute the group command from the .bhop file associated with shortcut TARGET matching command EXTRA.  If EXTRA argument not given, executes "default" command.
+    {}: return the bhop configuration folder.
+    {}: open the bhop.toml configuration file.
+    {}: return the current version of bhop.
+    {}: print this help message.
+    {}: mark the current directory for later return.
+    {}: return to the last directory marked with brb.
+    {} [*TARGET]: if COMMAND is a shortcut, cd to the shortcut's path.  If TARGET given, create shortcut to COMMAND with name TARGET.
