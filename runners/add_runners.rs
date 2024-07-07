@@ -43,6 +43,7 @@ pub enum Shell {
     Bash,
     Nushell,
     Powershell,
+    Elvish
 }
 
 impl Shell {
@@ -55,6 +56,7 @@ impl Shell {
             Shell::Bash => "sh",
             Shell::Nushell => "nu",
             Shell::Powershell => "pwsh",
+            Shell::Elvish => "elvish",
         }
     }
 
@@ -73,6 +75,7 @@ impl Shell {
             Shell::Bash => "BASH",
             Shell::Nushell => "NUSHELL",
             Shell::Powershell => "POWERSHELL",
+            Shell::Elvish => "ELVISH",
         }
     }
 
@@ -84,6 +87,7 @@ impl Shell {
             Shell::Bash => "BHOP_BASH_CONFIG_DIR",
             Shell::Nushell => "BHOP_NUSHELL_CONFIG_DIR",
             Shell::Powershell => "BHOP_POWERSHELL_CONFIG_DIR",
+            Shell::Elvish => "BHOP_ELVISH_CONFIG_DIR",
         }
     }
 
@@ -93,6 +97,7 @@ impl Shell {
             Shell::Nushell => "nu",
             Shell::Powershell => "ps1",
             Shell::Zsh => "zsh",
+            Shell::Elvish => "elv",
             _ => "sh",
         }
     }
@@ -105,6 +110,7 @@ impl Shell {
             Shell::Nushell => include_str!("scripts/runner.nu"),
             Shell::Powershell => include_str!("scripts/runner.ps1"),
             Shell::Zsh => include_str!("scripts/runner.zsh"),
+            Shell::Elvish => include_str!("scripts/runner.elv"),
             _ => include_str!("scripts/runner.sh"),
         }
     }
@@ -124,6 +130,7 @@ impl Shell {
             Shell::Bash => "HOME",
             Shell::Nushell => "nu.env-path",
             Shell::Powershell => "profile",
+            Shell::Elvish => "$E:HOME/.config/elvish",
         }
     }
 
@@ -136,6 +143,7 @@ impl Shell {
             Shell::Bash => ".bashrc",
             Shell::Nushell => "env.nu",
             Shell::Powershell => "Microsoft.Powershell_profile.ps1",
+            Shell::Elvish => "rc.elv",
         }
     }
 
